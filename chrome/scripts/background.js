@@ -43,6 +43,8 @@ if (typeof newInstallt === 'undefined') {
   localStorage['secure_search'] = "false";         // hyper secure
   localStorage['coverage_plus_one_two'] = "false"; // coverage +1 & +2
 
+  localStorage.cohort = "4";
+
   localStorage.omnibox = "true";
   localStorage.everywhere = "false";
   localStorage.versionInstaled = chrome.app.getDetails().version.toString();
@@ -204,7 +206,8 @@ function reportUsage() {
       searches_total: localStorage.searches_total || "0",
       search_engine: localStorage.search_engines || "Default",
       omnibox: localStorage.omnibox || "false",
-      everywhere: localStorage.everywhere || "false"
+      everywhere: localStorage.everywhere || "false",
+      cohort: localStorage.cohort || "none"
     }
 
     $.post(url, params).done(function(data) {

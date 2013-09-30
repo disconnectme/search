@@ -1,33 +1,53 @@
+"use strict";
+
 /* Paints the UI. */
-window.onload = function() {
-  const BACKGROUND = chrome.extension.getBackgroundPage();
-  const DESERIALIZE = BACKGROUND.deserialize;
+
   const SEARCH_ENGINE_LABEL = 'search_engines';
   const CHK_MODE_SETTINGS_LABEL = 'chk_mode_settings';
   const TXT_SEARCH = $('#txt_search');
   const TXT_DEFAULT_MESSAGE = 'Search privately';
+  var localStorageScript = new Array;
+
+  /* Destringifies an object. */
+  function DESERIALIZE(object) {
+    return (typeof object == 'string') ? JSON.parse(object) : object; 
+  }
+
+  function setLocalStorage(key, value){
+     self.port.emit("setLocalStorage", key, value);
+     localStorageScript[key] = value;
+  };
+
+  function getLocalStorage(key){
+    return localStorageScript[key]; 
+  };
 
   initialize();
 
   function initialize() {
-    // set variables in localStorage
-    define_variables();
+    self.port.emit("getLocalStorage");
 
-    // set functions/events
-    define_events();
+    setTimeout( function() {
+      // set variables in localStorage
+      define_variables();
 
-    //temporary omnibox/everywhere/secure usage analytics
-    analytics();
+      // set functions/events
+      define_events();
 
-    // default values
-    defaults_values();
+      //temporary omnibox/everywhere/secure usage analytics
+      analytics();
+
+      // default values
+      defaults_values();
+
+      updateSearchEngineIcon(getLocalStorage(SEARCH_ENGINE_LABEL));
+    }, 1000);
   };
 
-  function define_variables() {
-  };
+  function define_variables() { };
 
   function define_events() {
-    $('#btn_search').click(btnSearchClick);
+    $('#txt_search').keyup(txtSearchKeyUp);
     $('#toolbar_info').click(toolBarInfoClick);
     $('#toolbar_feedback').click(emailSupportClick);
     $('.checkbox li, .mode_settings').click(checkItem);
@@ -54,11 +74,11 @@ window.onload = function() {
         var omnibox = $('#omnibox-box');
         if (omnibox.is(':checked')) {
           $.get("https://disconnect.me/search/omnibox/enabled");
-          localStorage.omnibox = "true";
+          setLocalStorage('omnibox' , "true");
         }
         else {
           $.get("https://disconnect.me/search/omnibox/disabled");
-          localStorage.omnibox = "false";
+          setLocalStorage('omnibox' , "false");
         }
     });
 
@@ -66,29 +86,27 @@ window.onload = function() {
         var everywhere = $('#everywhere-box');
         if (everywhere.is(':checked')) {
           $.get("https://disconnect.me/search/everywhere/enabled");
-          localStorage.everywhere = "true";
+          setLocalStorage('everywhere' , "true");
         }
         else {
           $.get("https://disconnect.me/search/everywhere/disabled");
-          localStorage.everywhere = "false";
+          setLocalStorage('everywhere' , "false");
         }
     });
-
-    TXT_SEARCH.focus(function () { $(this).css('background-position', '0px -27px'); });
-    TXT_SEARCH.blur(function () { $(this).css('background-position', '0px 0px'); });
   };
 
   function defaults_values() {
-    var o_se = $(':input[class="'+SEARCH_ENGINE_LABEL+'"][value="'+ DESERIALIZE(localStorage[SEARCH_ENGINE_LABEL]) +'"]');
+    var o_se = $(':input[class="'+SEARCH_ENGINE_LABEL+'"][value="'+ DESERIALIZE(getLocalStorage(SEARCH_ENGINE_LABEL)) +'"]');
     if (o_se != undefined) {
-      o_se.attr('checked', true).parent().addClass("active");
+      o_se.attr('checked', true);
       //TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE.format(o_se.next().text()));
       TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE);
     }
 
-    updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
-
-    var chkbox = JSON.parse(localStorage[CHK_MODE_SETTINGS_LABEL]);
+    updateSearchEngineIcon(getLocalStorage(SEARCH_ENGINE_LABEL));
+        
+    var chkbox = JSON.parse(getLocalStorage(CHK_MODE_SETTINGS_LABEL));
+    
     $('#omnibox-box').attr('checked', chkbox['ominibox']);
     $('#everywhere-box').attr('checked', chkbox['everywhere']);
 
@@ -100,10 +118,12 @@ window.onload = function() {
     TXT_SEARCH.focus();
   };
 
-
-  function btnSearchClick() {
+  function txtSearchKeyUp(e) {
     const PREFIX_URL = "https://";
-    var searchEngineIndex = DESERIALIZE(localStorage[SEARCH_ENGINE_LABEL]);
+    e.which = e.which || e.keyCode;
+    if(e.which != 13) return;
+
+    var searchEngineIndex = DESERIALIZE(getLocalStorage(SEARCH_ENGINE_LABEL));
     var uri = null;
 
     if (searchEngineIndex == 0) uri = 'www.google.com/search/?q=';
@@ -112,25 +132,23 @@ window.onload = function() {
     else if (searchEngineIndex == 3) uri = 'blekko.com/ws/?q=';
     else if (searchEngineIndex == 4) uri = 'duckduckgo.com/?q=';
 
-    chrome.tabs.create({
-      url: PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup'
-    });
+    self.port.emit("createTab", PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup');
   };
 
   function chkSearchEngineClick() {
     var checkbox = $(this),
-        checkbox_class = "." + checkbox.attr("class");
-
+    checkbox_class = "." + checkbox.attr("class");
+    
     $(checkbox_class).attr("checked",false).parent().removeClass("active").find("span").removeClass("flipInYGreen animated");
     // save value in localstorage
-    localStorage[SEARCH_ENGINE_LABEL] = DESERIALIZE(checkbox.attr('value'));
-
-    updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
-
+    setLocalStorage(SEARCH_ENGINE_LABEL, DESERIALIZE(checkbox.attr('value')));
+    
+    updateSearchEngineIcon(getLocalStorage(SEARCH_ENGINE_LABEL));
     // force checked (always true);
     if (!checkbox.is(':checked'))
       checkbox.prop('checked', true).parent().addClass("active").find("span").addClass("flipInYGreen animated");
-    };
+    TXT_SEARCH.focus();
+  };
 
   function chkModeSettingsClick() {
     var omnibox = $('#omnibox-box');
@@ -142,26 +160,15 @@ window.onload = function() {
       'everywhere': everywhere.is(':checked'),
       'secure': secure.is(':checked')
     };
-    localStorage[CHK_MODE_SETTINGS_LABEL] = JSON.stringify(chk_box);
+    setLocalStorage(CHK_MODE_SETTINGS_LABEL, JSON.stringify(chk_box));
 
     var mode = 0;
     if (everywhere.is(':checked')) mode = 2;
     else if (omnibox.is(':checked')) mode = 1;
-    localStorage['mode_settings'] = DESERIALIZE(mode);
+    setLocalStorage('mode_settings' , DESERIALIZE(mode));
 
-    if (secure.is(':checked') == true) {
-      if (BACKGROUND.bgPlusOne.hasProxy()) {
-        BACKGROUND.bgPlusOne.setProxy();
-      }
-    } else {
-      chrome.tabs.query({active: true}, function (tabs) {
-        if (!BACKGROUND.bgPlusOne.isProxyTab(tabs[0].id)) {
-          BACKGROUND.bgPlusOne.removeProxy();
-        }
-      });
-    }
-
-    localStorage['secure_search'] = DESERIALIZE(secure.is(':checked'));
+    setLocalStorage('secure_search', DESERIALIZE(secure.is(':checked')));
+    TXT_SEARCH.focus();
   };
 
   function bubblePopUp(){
@@ -169,7 +176,7 @@ window.onload = function() {
       opacity: 1,
       top: 35
     });
-  }
+  };
 
   function closeBubblePopUp() {
     $('#exp-msg').stop(true,true).animate({
@@ -178,51 +185,43 @@ window.onload = function() {
     }, function(){
       $(this).hide();
     });
-  }
+  };
 
   function showHelpImage() {
     var image = $(this).attr('id') == 'mode1_info' ? '#ominibox' : '#everywhere';
     $(image).show().css("opacity",0).stop(true,true).animate({
       opacity: 1,
-      marginTop: 12
+      top: 46
     });
-  }
+  };
+
   function hideHelpImage() {
     var image = $(this).attr('id') == 'mode1_info' ? '#ominibox' : '#everywhere';
     $(image).stop(true,true).animate({
       opacity: 0,
-      marginTop: 0
+      top: 21
     }, function(){
       $(this).hide();
     });
-  }
+  };
 
   function emailSupportClick() {
     var emailTo = "support@disconnect.me",
           title = "Disconnect Search Support and Feedback",
-          action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
-    chrome.tabs.getSelected(function(tab){
-      chrome.tabs.update(tab.id, { url: action_url });
-    })
-  }
+     action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
+     self.port.emit("email", action_url);
+  };
 
   function iconeCloseClick() {
     $('.icone_close').removeClass('icone_close_absolute');
     $('#ominibox').fadeOut('fast');
     $('#everywhere').fadeOut('fast');
 
-    clientResize(211); //clientResize('272px');
     $('#settings').fadeIn('slow');
   };
 
   function toolBarInfoClick() {
-    chrome.tabs.create({url: 'http://disconnect.me/search/info'});
-  };
-
-  function clientResize(height) {
-    $('html,body').stop(true,true).animate({
-      "height":height
-    })
+    self.port.emit("createTab", "http://disconnect.me/search/info");
   };
 
   function checkItem(){
@@ -231,7 +230,7 @@ window.onload = function() {
     } else {
       $(this).find("input").trigger("click");
     }
-  }
+  };
 
   function updateSearchEngineIcon(x) {
     var icon;
@@ -241,14 +240,22 @@ window.onload = function() {
     else if (x == 3) icon = "blekko";
     else if (x == 4) icon = "duckduckgo";
     document.getElementById("search_engine").className = icon;
-  }
+    $("#se_"+icon).prop('checked', true).parent().addClass("active").find("span").addClass("flipInYGreen animated");
+  };
 
-};
+  self.port.on("handleLocalStorage", function handleLocalStorage(value) {     
+    localStorageScript = JSON.parse(JSON.stringify(value));
+  });
 
-String.prototype.format = String.prototype.f = function() {
-  var s = this, i = arguments.length;
-  while (i--) {
-    s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-  }
-  return s;
-};
+  self.port.on("show", function show(show, x) {
+    TXT_SEARCH.val("");
+    TXT_SEARCH.focus();
+  });
+
+  String.prototype.format = String.prototype.f = function() {
+    var s = this, i = arguments.length;
+    while (i--) {
+      s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+    }
+    return s;
+  };

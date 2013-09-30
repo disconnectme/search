@@ -1,9 +1,9 @@
 {
   "name": "Disconnect Search",
-  "version": "0.0.7.9",
+  "version": "0.0.7.10",
   "manifest_version": 2,
   "description": "Disconnect Search",
-  "icons": {"128": "images/128_new.png", "48": "images/48_new3.png", "16": "images/16_new.png"},
+  "icons": {"128": "images/128.png", "48": "images/48.png", "16": "images/16.png"},
   "homepage_url": "http://disconnect.me",
   "permissions": [
     "chrome://favicon/",
@@ -34,7 +34,7 @@
   },
   "browser_action": {
     "default_title": "Disconnect Search",
-    "default_icon": "images/48_new3.png",
+    "default_icon": "images/48.png",
     "default_popup": "markup/popup.html"
   },
   "content_scripts": [{

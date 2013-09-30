@@ -5,11 +5,6 @@ function DMSP1() {
   this.C_PROXY_REDIRECT = "disconnect.me/search";
   this.C_PROXY_SEARCH = "search.disconnect.me";
 
-  // for development
-  //this.C_PROXY_INVISIBLE = "ec2-107-22-92-185.compute-1.amazonaws.com:3000";
-  //this.C_PROXY_REDIRECT = "search-test-proxy-balancer-1819190889.us-east-1.elb.amazonaws.com/search";
-  //this.C_PROXY_PRESETTING = "search-test-proxy-balancer-1819190889.us-east-1.elb.amazonaws.com/activation";
-
   // configuration to set our proxy server
   this.config_proxied = {
     mode: "pac_script",
@@ -528,7 +523,7 @@ String.prototype.count = function(s1) {
 };
 
 DMSP1.prototype.updateIcon = function(enabled) {
-  var icon_name = (enabled) ? '/images/48.png' : '/images/48_b.png';
+  var icon_name = (enabled) ? '/images/48_g.png' : '/images/48.png';
   //chrome.browserAction.setIcon({ path: icon_name });
 };
 

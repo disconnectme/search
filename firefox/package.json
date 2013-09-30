@@ -1,0 +1,14 @@
+{
+  "id": "jid1-QVV4SsFKRtzSjA",
+  "version": "0.0.22",
+  "license": "GPL v3",
+  "name": "disconnect-search",
+  "fullName": "Disconnect Search",
+  "description": "Disconnect Search is a proxy that allows you to search privately using your favorite search engine.",
+  "author": "Disconnect Team",
+  "homepage": "http://www.disconnect.me/",
+  "icon": "./data/images/48.png",
+  "permissions": {
+  	"private-browsing": true
+  }
+}
