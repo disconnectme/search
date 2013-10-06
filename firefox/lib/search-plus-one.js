@@ -23,11 +23,6 @@ var Request = require("sdk/request").Request;
 var logger = require("./logger");
 
 /* BEGIN - Variables */
-this.iconChange = false;
-this.logEnabled = false;
-this.enablePresetting = false;
-this.channelRedirect = true; // force
-
 this.proxy_tabs = [];
 
 this.C_PROXY_INVISIBLE = "invisible.disconnect.me";
@@ -47,17 +42,15 @@ this.config_proxied = {
   port: 3000
 };
 
-// send value in header: X-Disconnect-Auth: 'value'
-this.XDHR = {
-  name: 'X-Disconnect-Auth',
-  value: 'none'
-};
-
 this.disconnectID = 0;
 this.requestID = 0;
-
 this.last_tab_actived = 0;
 this.current_search = 0;
+
+this.XDHR = {name: 'X-Disconnect-Auth', value: 'none'};
+this.channelRedirect = true;
+this.enablePresetting = false;
+this.iconChange = this.logEnabled = this.sendXDIHR = false;
 /* END - Variables */
 
 
@@ -316,6 +309,19 @@ function onHttpModifyRequest(channel) {
       channel.setRequestHeader(XDHR.name, XDHR.value, false);
     } 
 
+    // get more information
+    if (sendXDIHR == true) {
+      channel.setRequestHeader('XDIHR', 'trace', false);
+    }
+
+    // delete the Referer header from all requests
+    try {
+      var refererValue = channel.getRequestHeader("Referer");
+      if (refererValue.indexOf(C_PROXY_SEARCH) >= 0) {
+        channel.setRequestHeader('Referer', null, false);
+      }
+    }catch(e){}
+
     /* Traps and selectively cancels or redirects a request. */
     const PROXY_REDIRECT_BY_PRESETTING = "https://" + C_PROXY_PRESETTING;
     const PROXY_REDIRECT = "https://" + C_PROXY_REDIRECT;
@@ -422,7 +428,7 @@ function onHttpModifyRequest(channel) {
         } else if (isActiveProxy() && (isDuckGoRedirSearch || isYahooRedirSearch)) {
           // HACK duckduckgo and yahoo redirect - +1 result
           // *NOT* update data structure (onWebBeforeRequest)
-            logger.console("HACK duckduckgo and yahoo redirect - +1 result");
+          logger.console("HACK duckduckgo and yahoo redirect - +1 result");
         } else {
           onWebBeforeRequest(REQUESTED_URL, browser._disconnectID, browser._requestID);
         }
@@ -911,28 +917,29 @@ function barFocusSearch(window) {
   }
 }
 
-function injectGoogleForm() { 
+function injectGoogleForm() {
+  var jsgoogle = "";
+  jsgoogle += "var form = document.forms[0];";
+  jsgoogle += "if (form) { ";
+  jsgoogle += "  form.onsubmit = function() { ";
+  jsgoogle += "    form.submit(); ";
+  jsgoogle += "  } ";
+  jsgoogle += "} ";
+
   pageMod.PageMod({
     include: /.*google.*/,
-    contentScript: 'document.forms[0].onsubmit = function() { document.forms[0].submit(); }',
+    contentScript: jsgoogle,
     contentScriptWhen: "ready"
   });
 };
 
 function pinterestResquest() {
-  var reqPin = Request({
+  Request({
     url: "http://pinterest.com/all/food_drink/",
-    overrideMimeType: "text/plain;",
     onComplete: function (response) {
       logger.console("request Pinterest");
-      /* logger.console(response.status);
-      for (var headerName in response.headers) {
-        logger.console(headerName + " : " + response.headers[headerName]);
-      }*/
     }
-  });
-
-  reqPin.get();
+  }).get();
 }
 
 function saveOriginalPrefs() {
@@ -978,7 +985,11 @@ exports.removeProxyUnload = function() {
 
 exports.loadListeners = function(context) {
   //logger.console('Load Listerners');
+
   proxy_tabs = [];
+  if (deserialize(localStorage['development_mode']) == true) {
+    iconChange = logEnabled = sendXDIHR = true;
+  }
 
   logger.initialize(logEnabled);
   saveOriginalPrefs();

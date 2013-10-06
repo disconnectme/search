@@ -10,7 +10,6 @@ var Request = require("sdk/request").Request;
 var timer = require("sdk/timers");
 var self = require("sdk/self");
 var windows = require("sdk/windows");
-var logger = require("./logger");
 var DMSP1 = require("search-plus-one.js");
 
 var searchPanel = panel.Panel({
@@ -71,21 +70,22 @@ exports.main = function(options, callbacks) {
 
   // define variables
   if (options.loadReason == "install") {
+    localStorage['development_mode'] = "false";
     var chk_box = {'ominibox': true, 'everywhere': false, 'secure': false};
-
-    localStorage['search_engines'] = "0";
-    localStorage['mode_settings'] = "1";
     localStorage['chk_mode_settings'] = JSON.stringify(chk_box);
+    localStorage['search_engines'] = "0"; // google
+    localStorage['mode_settings'] = "1";  // omnibox
 
     localStorage['secure_reminder_show'] = "false";  // open dialog
     localStorage['secure_search'] = "false";         // hyper secure
     localStorage['coverage_plus_one_two'] = "false"; // coverage +1 & +2
 
-    localStorage['omnibox'] = "true";  // private search in ominibox
+    localStorage['cohort'] = "4";
+
+    localStorage['omnibox'] = "true";     // private search in ominibox
     localStorage['everywhere'] = "false"; // private search everywhere
     localStorage['versionInstaled'] = self.version;
-     var reqNewInstal = Request({ url: "http://goldenticket.disconnect.me/search"});
-     reqNewInstal.get();
+    Request({url:"http://goldenticket.disconnect.me/search"}).get();
   }
 
   DMSP1.loadListeners(this);
@@ -96,6 +96,11 @@ exports.main = function(options, callbacks) {
   } else if (options.loadReason == "upgrade" || options.loadReason == "downgrade") {
     tabs.open('https://www.disconnect.me/search/intro');
   }
+
+  // Post anonymous usage data to server on startup.
+  reportUsage();
+  // Try to run report every hour - it will only run every 24 hours.
+  timer.setInterval(reportUsage, 60 * 60 * 1000);
 };
 
 exports.onUnload = function(reason) {
@@ -110,11 +115,11 @@ exports.onUnload = function(reason) {
 function reportUsage() {
   // Ensure we have valid dates.
   var now = new Date();
-  var firstPing = new Date(localStorage['firstPing'] || now);
-  var lastPing = new Date(localStorage['lastPing'] || now);
-
+  var firstPing = new Date(localStorage['firstPing'] || now.getTime());
+  var lastPing = new Date(localStorage['lastPing'] || now.getTime());
+  
   const howLongInstalledMsec = now.getTime() - firstPing.getTime();
-  const url = '';
+  const url = "https://services.disconnect.me/search_ping";
   const oneDayAsMsec = 24 * 60 * 60 * 1000;
 
   // At least 24 hours between reports.
@@ -129,30 +134,23 @@ function reportUsage() {
       searches_total: localStorage['searches_total'] || "0",
       search_engine: localStorage['search_engines'] || "Default",
       omnibox: localStorage['omnibox'] || "false",
-      everywhere: localStorage['everywhere'] || "false"
+      everywhere: localStorage['everywhere'] || "false",
+      cohort: localStorage['cohort'] || "none"
     }
+    //console.log("Report Usage: " + JSON.stringify(params));
     
-    logger.console("Report Usage: " + JSON.stringify(params));
-    
-    var reqReport = Request({
-        url: "https://services.disconnect.me/search_ping",
-        content: params,
-        overrideMimeType: "text/plain;",
-        onComplete: function (response) {
-          var now = new Date();
-          localStorage['searches_since_last_ping'] = JSON.stringify(0);
-          localStorage['lastPing'] = now;
-          if (localStorage['firstPing'] == null) {
-            localStorage['firstPing'] = now;
-          }
+    Request({
+      url: url,
+      content: params,
+      onComplete: function (response) {
+        var now = new Date();
+        localStorage['searches_since_last_ping'] = JSON.stringify(0);
+        localStorage['lastPing'] = now;
+        if (localStorage['firstPing'] == null) {
+          localStorage['firstPing'] = now;
         }
-      });
-
-      reqReport.post();
+        //console.log(response.text);
+      }
+    }).post();
   }
 };
-
-// Try to run report every hour - it will only run every 24 hours.
-timer.setInterval(reportUsage, 60 * 60 * 1000);
-// Post anonymous usage data to server on startup.
-reportUsage();
