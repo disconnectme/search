@@ -1,8 +1,8 @@
 {
   "id": "search@disconnect.me",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "GPLv3",
-  "name": "disconnect-search",
+  "name": "search",
   "fullName": "Disconnect Search",
   "description": "Search privately using your favorite search engine.",
   "author": "Disconnect",
