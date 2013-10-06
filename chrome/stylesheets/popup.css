@@ -147,7 +147,7 @@ div {
   color: #000000;
   float: left;
   height: 30px;
-  width: 177px;
+  width: 148px;
   padding-left: 10px;
   background-position: 0px 0px;
   border: none;
@@ -549,10 +549,6 @@ div {
         -webkit-transform: perspective(400px) rotateY(-20deg);
     }
 
-    70% {
-        -webkit-transform: perspective(400px) rotateY(20deg);
-    }
-
     100% {
         -webkit-transform: perspective(400px) rotateY(0deg);
     }
@@ -564,10 +560,6 @@ div {
 
     40% {
         -moz-transform: perspective(400px) rotateY(-20deg);
-    }
-
-    70% {
-        -moz-transform: perspective(400px) rotateY(20deg);
     }
 
     100% {
@@ -583,10 +575,6 @@ div {
         -o-transform: perspective(400px) rotateY(-20deg);
     }
 
-    70% {
-        -o-transform: perspective(400px) rotateY(20deg);
-    }
-
     100% {
         -o-transform: perspective(400px) rotateY(0deg);
     }
@@ -598,10 +586,6 @@ div {
 
     40% {
         transform: perspective(400px) rotateY(-20deg);
-    }
-
-    70% {
-        transform: perspective(400px) rotateY(20deg);
     }
 
     100% {

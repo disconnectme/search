@@ -1,39 +1,13 @@
-// hide logs
-//var console = {};
-//console.log = function(){};
-
 const TABS = chrome.tabs;
-
-/* Initialize background search plus one */
-const bgPlusOne = new DMSP1();
-bgPlusOne.loadListeners(bgPlusOne);
 
 /* The domain object. */
 var SITENAME = new Sitename;
-
-/* Destringifies an object. */
-function deserialize(object) {
-  if (typeof object === 'undefined')
-    return undefined;
-  else if (typeof object == 'string') 
-    return JSON.parse(object);
-  else
-    return object;
-}
-
-/* Adds to the search totals in localStorage*/
-function updatestats() {
-  const total = parseInt(localStorage.searches_total) + 1 || 1;
-  localStorage.searches_total = JSON.stringify(total);
-
-  const since = parseInt(localStorage.searches_since_last_ping) + 1 || 1;
-  localStorage.searches_since_last_ping = JSON.stringify(since);
-}
 
 // Shows user welcome page and records installed version
 const newInstallt = deserialize(localStorage['newInstallt']);
 if (typeof newInstallt === 'undefined') {
   localStorage['newInstallt'] = "false";
+  localStorage['development_mode'] = "false";
 
   localStorage['chk_mode_settings'] = '{"ominibox":true,"everywhere":false,"secure":false}';
   localStorage['search_engines'] = "0"; // google
@@ -51,7 +25,21 @@ if (typeof newInstallt === 'undefined') {
 
   TABS.create({url: 'https://www.disconnect.me/search/intro'});
   $.get('http://goldenticket.disconnect.me/search');
-} 
+};
+
+/* Initialize background search plus one */
+const bgPlusOne = new DMSP1();
+bgPlusOne.loadListeners(bgPlusOne);
+
+/* Destringifies an object. */
+function deserialize(object) {
+  if (typeof object === 'undefined')
+    return undefined;
+  else if (typeof object == 'string') 
+    return JSON.parse(object);
+  else
+    return object;
+};
 
 /* Traps and selectively cancels or redirects a request. */
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
@@ -139,7 +127,6 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
         url_redirect = PROXY_REDIRECT + url_params;
         presetting = false;
       }
-
       //register the tab as a proxy tab passing in the url we will use as the base search
       bgPlusOne.registerProxiedTab(details.tabId, PROXY_REDIRECT + url_params, details.requestId, presetting);
 
@@ -183,6 +170,15 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   return blockingResponse;
 }, {urls: ['http://*/*', 'https://*/*']}, ['blocking']);
 
+/* Adds to the search totals in localStorage*/
+function updatestats() {
+  const total = parseInt(localStorage.searches_total) + 1 || 1;
+  localStorage.searches_total = JSON.stringify(total);
+
+  const since = parseInt(localStorage.searches_since_last_ping) + 1 || 1;
+  localStorage.searches_since_last_ping = JSON.stringify(since);
+};
+
 /* Submits stats every 24 hours. */
 function reportUsage() {
   // Ensure we have valid dates.
@@ -219,7 +215,7 @@ function reportUsage() {
       }
     });
   }
-}
+};
 
 // Post anonymous usage data to server on startup.
 reportUsage();

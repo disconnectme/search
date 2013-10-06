@@ -30,6 +30,11 @@ function DMSP1() {
 
   // send value in header: X-Disconnect-Auth: 'value'
   this.XDHR = {name: 'X-Disconnect-Auth', value: 'none'};
+
+  this.iconChange = this.sendXDIHR = false;
+  if (deserialize(localStorage['development_mode']) == true) {
+    this.iconChange = this.sendXDIHR = true;
+  }
 }
 
 DMSP1.prototype.onWebBeforeRequest = function(details) {
@@ -108,6 +113,11 @@ DMSP1.prototype.onWebRequestBeforeSendHeaders = function(details) {
       }
       break;
     }
+  }
+
+  // get more information
+  if (this.sendXDIHR == true) {
+    details.requestHeaders.push({name: 'XDIHR', value: 'trace'});
   }
 
   return {requestHeaders: details.requestHeaders};
@@ -523,8 +533,10 @@ String.prototype.count = function(s1) {
 };
 
 DMSP1.prototype.updateIcon = function(enabled) {
-  var icon_name = (enabled) ? '/images/48_g.png' : '/images/48.png';
-  //chrome.browserAction.setIcon({ path: icon_name });
+  if (this.iconChange == true) {
+    var icon_name = (enabled) ? '/images/48_g.png' : '/images/48.png';
+    chrome.browserAction.setIcon({path: icon_name});
+  }
 };
 
 // Message communication
