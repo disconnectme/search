@@ -207,7 +207,7 @@
 
   function emailSupportClick() {
     var emailTo = "support@disconnect.me",
-          title = "Disconnect Search Support and Feedback",
+          title = "Disconnect Search support",
      action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
      self.port.emit("email", action_url);
   };

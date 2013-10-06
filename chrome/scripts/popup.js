@@ -199,7 +199,7 @@ window.onload = function() {
 
   function emailSupportClick() {
     var emailTo = "support@disconnect.me",
-          title = "Disconnect Search Support and Feedback",
+          title = "Disconnect Search support",
           action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
     chrome.tabs.getSelected(function(tab){
       chrome.tabs.update(tab.id, { url: action_url });
