@@ -1,6 +1,6 @@
 {
   "name": "Disconnect Search",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "manifest_version": 2,
   "description": "Search privately using your favorite search engine.",
   "icons": {"128": "images/128.png", "48": "images/48.png", "16": "images/16.png"},
