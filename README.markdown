@@ -5,7 +5,7 @@ that lets you search privately using your favorite search engine.
 
 ## License
 
-Copyright 2010–2013 Disconnect, Inc.
+Copyright 2013 Disconnect, Inc.
 
 This program, excluding brand features, is free software: you can redistribute
 it and/or modify it under the terms of the GNU General Public License as
