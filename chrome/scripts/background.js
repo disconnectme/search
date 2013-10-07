@@ -17,13 +17,13 @@ if (typeof newInstallt === 'undefined') {
   localStorage['secure_search'] = "false";         // hyper secure
   localStorage['coverage_plus_one_two'] = "false"; // coverage +1 & +2
 
-  localStorage.cohort = "4";
+  localStorage.cohort = "7";
 
   localStorage.omnibox = "true";
   localStorage.everywhere = "false";
   localStorage.versionInstaled = chrome.app.getDetails().version.toString();
 
-  TABS.create({url: 'https://www.disconnect.me/search/intro'});
+  TABS.create({url: 'https://www.disconnect.me/search/welcome'});
   $.get('http://goldenticket.disconnect.me/search');
 };
 

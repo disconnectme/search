@@ -92,9 +92,9 @@ exports.main = function(options, callbacks) {
 
   // welcome pages
   if (options.loadReason == "install") {
-    tabs.open('https://www.disconnect.me/search/intro');
+    tabs.open('https://www.disconnect.me/search/welcome');
   } else if (options.loadReason == "upgrade" || options.loadReason == "downgrade") {
-    tabs.open('https://www.disconnect.me/search/intro');
+    //tabs.open('https://www.disconnect.me/search/intro');
   }
 
   // Post anonymous usage data to server on startup.
