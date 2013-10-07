@@ -1,5 +1,5 @@
 #!/bin/bash
-# A script that packages Disconnect for distribution.
+# A script that packages Disconnect Search for distribution.
 #
 # Copyright 2013 Disconnect, Inc.
 #
