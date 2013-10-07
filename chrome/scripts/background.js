@@ -118,7 +118,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
       else searchEngineName = 'google';
 
       // redirect search by proxy
-      var query = match[1].replace(/'/g, "\\'");
+      var query = match[1].replace(/'/g, "%27");
       var url_params = "/?s=" + MN + "&q=" + query + "&se=" + searchEngineName;
       var url_redirect = null;
       if (!bgPlusOne.proxy_actived && !bgPlusOne.isProxyTabActived(details.tabId, REQUESTED_URL)) {

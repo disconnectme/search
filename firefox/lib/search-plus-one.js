@@ -367,7 +367,8 @@ function onHttpModifyRequest(channel) {
         else searchEngineName = 'google';
 
         // redirect search by proxy
-        var url_params = "/?s=" + MN + "&q=" + match[1] + "&se=" + searchEngineName;
+        var query = match[1].replace(/'/g, "%27");
+        var url_params = "/?s=" + MN + "&q=" + query + "&se=" + searchEngineName;
         var url_redirect = null;
         if (!isProxyTab(browser._disconnectID) && enablePresetting) {
           url_redirect = PROXY_REDIRECT_BY_PRESETTING + url_params;

@@ -101,8 +101,8 @@ window.onload = function() {
   };
 
   function escapeSearchQuery(q) {
-    return encodeURIComponent(q).replace(/'/g, "%27");
-  }
+    return encodeURIComponent(q);
+  };
 
   function btnSearchClick() {
     const PREFIX_URL = "https://";
