@@ -100,6 +100,9 @@ window.onload = function() {
     TXT_SEARCH.focus();
   };
 
+  function escapeSearchQuery(q) {
+    return encodeURIComponent(q).replace(/'/g, "%27");
+  }
 
   function btnSearchClick() {
     const PREFIX_URL = "https://";
@@ -113,7 +116,7 @@ window.onload = function() {
     else if (searchEngineIndex == 4) uri = 'duckduckgo.com/?q=';
 
     chrome.tabs.create({
-      url: PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup'
+      url: PREFIX_URL + uri + escapeSearchQuery(TXT_SEARCH.val()) + '&search_plus_one=popup'
     });
   };
 
