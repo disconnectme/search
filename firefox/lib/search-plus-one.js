@@ -170,6 +170,7 @@ var disconnectSearch = Class({
       var isProxied = ( ((modeSettings == 0) && isSearchByPopUp) || ((modeSettings == 1) && !isSearchByPage) || (modeSettings >= 2) );
       //logger.console(" modeSettings: " + modeSettings + " byPage: " + isSearchByPage + " byPopup: " + isSearchByPopUp + " isProxie: " + isProxied);
 
+      var isDisconnect = (REQUESTED_URL.indexOf(C_PROXY_SEARCH) >= 0);
       var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
       var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
       var isBing = (CHILD_DOMAIN.search("bing.") > -1);
@@ -177,24 +178,22 @@ var disconnectSearch = Class({
       var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
       var isChromeInstant = ( isGoogle && T_MAIN_FRAME && (REQUESTED_URL.search("chrome-instant") > -1) );
       var isGoogleOMBSearch = ( isGoogle && T_OTHER && (REQUESTED_URL.search("/complete/") > -1) );
-      var isGoogleSiteSearch = ( isGoogle && T_XMLHTTPREQUEST && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
+      var isGoogleSiteSearch = ( (isGoogle || isDisconnect) && T_XMLHTTPREQUEST && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
       var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
-      var isBingSiteSearch = ( isBing && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
-      var isBlekkoSearch = ( isBlekko && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
-      var isYahooSearch = ( isYahoo && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
-      //logger.console(" chromInstante:" + isChromeInstant + " gooOMB: " + isGoogleOMBSearch + " gooSite: " + isGoogleSiteSearch + " bingOMB: " + isBingOMBSearch + " bingSite: " + isBingSiteSearch + " blekko: " + isBlekkoSearch + " yahoo: " + isYahooSearch);
+      var isBingSiteSearch = ( (isBing || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
+      var isBlekkoSearch = ( (isBlekko || isDisconnect) && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
+      var isYahooSearch = ( (isYahoo || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
 
       var isDisconnectSearchPage = (REQUESTED_URL.search("search.disconnect.me/stylesheets/injected.css") > -1);
-      if (isDisconnectSearchPage) {
-        updatestats();
-      } 
+      if (isDisconnectSearchPage) updatestats();
 
       // blocking autocomplete by OminiBox or by Site URL
-      if ( isProxied && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
+      if ( (isProxied || isDisconnect) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
         var blocking = true;
-
-        if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
-        else if ( (modeSettings==2) && isGoogleSiteSearch && !isSearchByPage ) blocking = false;
+        if (!isDisconnect) {
+          if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
+          else if ( (modeSettings==2) && isGoogleSiteSearch && !isSearchByPage ) blocking = false;
+        }
 
         if (blocking) {
           logger.console("BLOCKING REQUEST", REQUESTED_URL);
@@ -710,7 +709,7 @@ function injectJsInSearchForm() {
     include: [/.*google.*/, /.*bing.*/, /.*yahoo.*/, /.*blekko.*/, /.*duckduckgo.*/],
     contentScriptFile: data.url("scripts/vendor/jquery/jquery.js"),
     contentScript: jsCode,
-    contentScriptWhen: "ready"
+    contentScriptWhen: "start"
   });
 };
 

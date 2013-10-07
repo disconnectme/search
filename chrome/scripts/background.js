@@ -79,16 +79,17 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   // blocking autocomplete by OminiBox or by Site URL
   var isChromeInstant = ( isGoogle && T_MAIN_FRAME && (REQUESTED_URL.search("chrome-instant") > -1) );
   var isGoogleOMBSearch = ( isGoogle && T_OTHER && (REQUESTED_URL.search("/complete/") > -1) );
-  var isGoogleSiteSearch = ( isGoogle && T_XMLHTTPREQUEST && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
+  var isGoogleSiteSearch = ( (isGoogle || isDisconnect) && T_XMLHTTPREQUEST && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
   var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
-  var isBingSiteSearch = ( isBing && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
-  var isBlekkoSearch = ( isBlekko && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
-  var isYahooSearch = ( isYahoo && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
-  if ( isProxied && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
+  var isBingSiteSearch = ( (isBing || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
+  var isBlekkoSearch = ( (isBlekko || isDisconnect) && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
+  var isYahooSearch = ( (isYahoo || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
+  if ( (isProxied || isDisconnect) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
     blocking = true;
-
-    if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
-    else if ( (modeSettings==2) && isGoogleSiteSearch && !isSearchByPage ) blocking = false;
+    if (!isDisconnect) {
+      if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
+      else if ( (modeSettings==2) && isGoogleSiteSearch && !isSearchByPage ) blocking = false;
+    }
 
     if (blocking) {
       blockingResponse = { cancel: true };
@@ -96,7 +97,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   }
 
   // Redirect URL -> Proxied
-  if (isProxied && (T_MAIN_FRAME) && ((isGoogle && hasSearch) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo) && !blocking) { 
+  if (isProxied && T_MAIN_FRAME && ((isGoogle && hasSearch) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo) && !blocking) { 
     //console.log("%c Search by OminiBox", 'background: #33ffff;');
     //console.log(details);
 

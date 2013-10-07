@@ -281,14 +281,15 @@ DMSP1.prototype.injectJsInSearchForm = function(tabId, url, type) {
   // Access Search Page Enginer without params
   if (type == 'main_frame' || type == undefined) {
     var found = false;
+    var isDisconnect = (url.indexOf(this.C_PROXY_SEARCH)>=0);
     if (new RegExp("www.google.").test(url)) found = true;
     else if (new RegExp(".bing.com").test(url)) found = true;
     else if (new RegExp(".yahoo.com").test(url)) found = true;
     else if (new RegExp("blekko.com").test(url)) found = true;
     else if (new RegExp("duckduckgo.com").test(url)) found = true;
-    if (found == true) {
+    if (found && !isDisconnect) {
       var jsCode = "";
-      jsCode += "$(document).ready(function() {"
+      //jsCode += "$(document).ready(function() {"
       jsCode += "  var search_plus_one = $(\"input[name$='search_plus_one']\").val();";
       jsCode += "  if (search_plus_one!=null) return;";
       jsCode += "  var forms = window.document.getElementsByTagName('form');";
@@ -305,7 +306,7 @@ DMSP1.prototype.injectJsInSearchForm = function(tabId, url, type) {
       jsCode += "      done = true;";
       jsCode += "    }";
       jsCode += "  });";
-      jsCode += "});";
+      //jsCode += "});";
       chrome.tabs.executeScript(tabId, {code: jsCode, runAt: "document_end"}, function(){
         //console.log("Injecting JavaScript Redirected to set value in search page");
       });
