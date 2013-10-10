@@ -498,9 +498,6 @@ function onWebBeforeRequest(url, tabId, requestId) {
 function updatestats() {
   const total = parseInt(localStorage['searches_total']) + 1 || 1;
   localStorage['searches_total'] = JSON.stringify(total);
-
-  const since = parseInt(localStorage['searches_since_last_ping']) + 1 || 1;
-  localStorage['searches_since_last_ping'] = JSON.stringify(since);
 };
 
 function onHttpExamineRespose(channel) {

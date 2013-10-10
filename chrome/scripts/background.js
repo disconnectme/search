@@ -23,6 +23,8 @@ if (typeof newInstallt === 'undefined') {
   localStorage.everywhere = "false";
   localStorage.versionInstaled = chrome.app.getDetails().version.toString();
 
+  localStorage.pwyw = JSON.stringify({date: new Date(), bucket: "viewed"});
+
   TABS.create({url: 'https://www.disconnect.me/search/welcome'});
   $.get('http://goldenticket.disconnect.me/search');
 };
@@ -65,9 +67,18 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
   var hasSearch = (REQUESTED_URL.search("/search") > -1);
   var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
+  var isDisconnectSite = (CHILD_DOMAIN.search("disconnect.me") > -1);
   var isDisconnect = bgPlusOne.isProxySearchUrl(REQUESTED_URL);
   var isDisconnectSearchPage = (REQUESTED_URL.search("search.disconnect.me/stylesheets/injected.css") > -1);
   if (isDisconnectSearchPage) updatestats();
+
+  if (isDisconnectSite) {
+    var CONTROL = document.getElementById('input-type');
+    //console.log(CONTROL);
+    var BUCKET = CONTROL && CONTROL.getAttribute('value');
+    //console.log("BUCKET: " + BUCKET);
+    localStorage.pwyw = JSON.stringify({pwyw: true, bucket: BUCKET});
+  }
 
   // Search proxied
   var modeSettings = deserialize(localStorage['mode_settings']);
@@ -176,9 +187,6 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
 function updatestats() {
   const total = parseInt(localStorage.searches_total) + 1 || 1;
   localStorage.searches_total = JSON.stringify(total);
-
-  const since = parseInt(localStorage.searches_since_last_ping) + 1 || 1;
-  localStorage.searches_since_last_ping = JSON.stringify(since);
 };
 
 /* Submits stats every 24 hours. */
@@ -200,7 +208,6 @@ function reportUsage() {
       weekly: JSON.stringify(howLongInstalledMsec >= 7 * oneDayAsMsec),
       monthly: JSON.stringify(howLongInstalledMsec >= 30 * oneDayAsMsec),
       version: localStorage.versionInstaled || "< 0.0.7.1",
-      searches_since_last_ping: localStorage.searches_since_last_ping || "-1",
       searches_total: localStorage.searches_total || "0",
       search_engine: localStorage.search_engines || "Default",
       omnibox: localStorage.omnibox || "false",
@@ -210,7 +217,6 @@ function reportUsage() {
 
     $.post(url, params).done(function(data) {
       var now = new Date();
-      localStorage.searches_since_last_ping = JSON.stringify(0);
       localStorage.lastPing = now;
       if (localStorage.firstPing == null) {
         localStorage.firstPing = now;

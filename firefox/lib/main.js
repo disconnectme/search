@@ -130,7 +130,6 @@ function reportUsage() {
       weekly: JSON.stringify(howLongInstalledMsec >= 7 * oneDayAsMsec),
       monthly: JSON.stringify(howLongInstalledMsec >= 30 * oneDayAsMsec),
       version: localStorage['versionInstaled'] || "< 0.0.7.1",
-      searches_since_last_ping: localStorage['searches_since_last_ping'] || "-1",
       searches_total: localStorage['searches_total'] || "0",
       search_engine: localStorage['search_engines'] || "Default",
       omnibox: localStorage['omnibox'] || "false",
