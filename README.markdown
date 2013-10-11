@@ -10,11 +10,11 @@ that lets you search privately using your favorite search engine.
 1. Run `./prebuild.sh`.
 2. In `builds/search.rdf`, replace:
 
-        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>19.0</em:minVersion><em:maxVersion>20.*</em:maxVersion></Description></em:targetApplication>
+        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>19.0</em:minVersion><em:maxVersion>20.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication>
 
    With:
 
-        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>1.5</em:minVersion><em:maxVersion>24.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication><em:targetApplication><Description><em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id><em:minVersion>0.7</em:minVersion><em:maxVersion>2.6.*</em:maxVersion></Description></em:targetApplication>
+        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>1.5</em:minVersion><em:maxVersion>24.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication><em:targetApplication><Description><em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id><em:minVersion>0.7</em:minVersion><em:maxVersion>2.6.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication>
 
 3. In `builds/tmp/install.rdf`, replace:
 
