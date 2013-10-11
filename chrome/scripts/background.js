@@ -1,12 +1,7 @@
 const TABS = chrome.tabs;
-const C_MN = "d2hhdGlmaWRpZHRoaXMx";
 
 /* The domain object. */
-function getHostname(href) {
-  var l = window.document.createElement("a");
-  l.href = href;
-  return l.hostname;
-};
+var SITENAME = new Sitename;
 
 // Shows user welcome page and records installed version
 const newInstallt = deserialize(localStorage['newInstallt']);
@@ -24,11 +19,11 @@ if (typeof newInstallt === 'undefined') {
 
   localStorage.cohort = "7";
 
-  localStorage.pwyw = JSON.stringify({date: new Date(), bucket: "viewed"});
-
   localStorage.omnibox = "true";
   localStorage.everywhere = "false";
   localStorage.versionInstaled = chrome.app.getDetails().version.toString();
+
+  localStorage.pwyw = JSON.stringify({date: new Date(), bucket: "viewed"});
 
   TABS.create({url: 'https://www.disconnect.me/search/welcome'});
   $.get('http://goldenticket.disconnect.me/search');
@@ -52,6 +47,7 @@ function deserialize(object) {
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
   const PROXY_REDIRECT_BY_PRESETTING = "https://" + bgPlusOne.C_PROXY_PRESETTING;
   const PROXY_REDIRECT = "https://" + bgPlusOne.C_PROXY_REDIRECT;
+  const MN = "d2hhdGlmaWRpZHRoaXMx";
   const REGEX_URL = /[?|&]q=(.+?)(&|$)/;
   const REGEX_URL_YAHOO = /[?|&]p=(.+?)(&|$)/;
   const TYPE = details.type;
@@ -60,7 +56,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   const T_SCRIPT = (TYPE == 'script');
   const T_XMLHTTPREQUEST = (TYPE == 'xmlhttprequest');
   const REQUESTED_URL = details.url;
-  const CHILD_DOMAIN = getHostname(REQUESTED_URL);
+  const CHILD_DOMAIN = SITENAME.get(REQUESTED_URL);
 
   var blockingResponse = {cancel: false};
   var blocking = presetting = false;
@@ -68,12 +64,10 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   var isBing = (CHILD_DOMAIN.search("bing.") > -1);
   var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
   var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
-  var isDisconnectSite = (CHILD_DOMAIN.search("disconnect.me") > -1);
   var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
   var hasSearch = (REQUESTED_URL.search("/search") > -1);
-  var hasMaps = (REQUESTED_URL.search("/maps") > -1);
   var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
-  var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
+  var isDisconnectSite = (CHILD_DOMAIN.search("disconnect.me") > -1);
   var isDisconnect = bgPlusOne.isProxySearchUrl(REQUESTED_URL);
   var isDisconnectSearchPage = (REQUESTED_URL.search("search.disconnect.me/stylesheets/injected.css") > -1);
   if (isDisconnectSearchPage) updatestats();
@@ -96,7 +90,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   // blocking autocomplete by OminiBox or by Site URL
   var isChromeInstant = ( isGoogle && T_MAIN_FRAME && (REQUESTED_URL.search("chrome-instant") > -1) );
   var isGoogleOMBSearch = ( isGoogle && T_OTHER && (REQUESTED_URL.search("/complete/") > -1) );
-  var isGoogleSiteSearch = ( (isGoogle || isDisconnect) && T_XMLHTTPREQUEST && !hasGoogleImgApi && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
+  var isGoogleSiteSearch = ( (isGoogle || isDisconnect) && T_XMLHTTPREQUEST && ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.search("output=search") > -1) || (REQUESTED_URL.search("/s?") > -1)) );
   var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
   var isBingSiteSearch = ( (isBing || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
   var isBlekkoSearch = ( (isBlekko || isDisconnect) && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
@@ -114,7 +108,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   }
 
   // Redirect URL -> Proxied
-  if (isProxied && T_MAIN_FRAME && ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo) && !blocking) { 
+  if (isProxied && T_MAIN_FRAME && ((isGoogle && hasSearch) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo) && !blocking) { 
     //console.log("%c Search by OminiBox", 'background: #33ffff;');
     //console.log(details);
 
@@ -135,8 +129,9 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
       else if ( (searchEngineIndex == 4 && !isSearchByPage) || (isDuckDuckGo && isSearchByPage) ) searchEngineName = 'duckduckgo';
       else searchEngineName = 'google';
 
-      var url_params = buildParameters(REQUESTED_URL, searchEngineName);
-      
+      // redirect search by proxy
+      var query = match[1].replace(/'/g, "%27");
+      var url_params = "/?s=" + MN + "&q=" + query + "&se=" + searchEngineName;
       var url_redirect = null;
       if (!bgPlusOne.proxy_actived && !bgPlusOne.isProxyTabActived(details.tabId, REQUESTED_URL)) {
         url_redirect = PROXY_REDIRECT_BY_PRESETTING + url_params;
@@ -155,7 +150,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   } else if (T_MAIN_FRAME && isDisconnect && !bgPlusOne.isProxyTab(details.tabId) && !blocking) {
     //console.log("%c Disconnect Search Page",'background: #33ffff;');
     var isHidden = (REQUESTED_URL.search("/browse/") > -1);
-    var url_params = "/?s=" + C_MN + "&" + REQUESTED_URL.split("?")[1]
+    var url_params = "/?s=" + MN + "&" + REQUESTED_URL.split("?")[1]
     var url_redirect = PROXY_REDIRECT_BY_PRESETTING + url_params;
 
     if (!isHidden) {
@@ -187,35 +182,6 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
 
   return blockingResponse;
 }, {urls: ['http://*/*', 'https://*/*']}, ['blocking']);
-
-function buildParameters(requested_url, searchEngineName){
-  var paramJSON = {};
-  var parameters = requested_url.split("?")[1].split("&");
-  
-  var excludeParam = new Array;
-  var url_params = "/?s=" + C_MN +  "&se=" + searchEngineName;
-
-  for (var i=0; i<parameters.length; i++) {
-    var aux = parameters[i].split("=");
-    if(aux[0] == "q" || aux[0] == "p") aux[1] = aux[1].replace(/'/g, "%27");
-    paramJSON[aux[0]] = aux[1];
-  }
-  for (var i=0; i<excludeParam.length; i++) {
-    delete paramJSON[excludeParam[i]];
-  }
-  for(var x in paramJSON) {
-    url_params += "&" + x + "=" + paramJSON[x];
-  }
-
-  if (searchEngineName == 'google') {
-    if (requested_url.search("/maps")>-1)
-    url_params += "&tbm=maps";
-  }else if (searchEngineName == 'yahoo') {
-    url_params = url_params.replace("&p=", "&q=");
-  }
-
-  return url_params;
-};
 
 /* Adds to the search totals in localStorage*/
 function updatestats() {
