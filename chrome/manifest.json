@@ -27,7 +27,6 @@
   "background": {
     "scripts": [
       "scripts/vendor/jquery/jquery.js",
-      "scripts/vendor/sitename/sitename.js",
       "scripts/search-plus-one.js",
       "scripts/background.js"
     ]
