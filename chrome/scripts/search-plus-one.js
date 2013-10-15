@@ -1,4 +1,7 @@
 function DMSP1() {
+  // background
+  this.BACKGROUND = chrome.extension.getBackgroundPage();
+
   // variables
   this.C_PROXY_INVISIBLE = "invisible.disconnect.me:3000";
   this.C_PROXY_PRESETTING = "search.disconnect.me/activation";
@@ -17,7 +20,7 @@ function DMSP1() {
                     
   // configuration to clear our proxy server 
   this.config_direct = { mode: "direct" };
-                    
+               
   // timer - alarm (disconnect proxy)
   this.timer = null;
   this.expiryTimer = 10000; //(10 seconds)
@@ -91,6 +94,9 @@ DMSP1.prototype.onWebBeforeRequest = function(details) {
           });
         }
       }
+
+      // set current tab page
+      tabObj.current_page = details.url;
     }
   }
 };
@@ -103,15 +109,27 @@ DMSP1.prototype.onWebRequestBeforeSendHeaders = function(details) {
     details.requestHeaders.push(this.XDHR);
   }
 
-  // delete the Referer header from all requests
+  // delete the Referer header from all search requests
   for (var i=0; i<details.requestHeaders.length; ++i) {
-    if (details.requestHeaders[i].name === 'Referer') {
+    if (details.requestHeaders[i].name.toLowerCase() === 'referer') {
       var headerValue = details.requestHeaders[i].value;
       if (headerValue.indexOf(this.C_PROXY_SEARCH) >= 0) {
         //console.log("Deleted the Referer header value", headerValue, "from", details.url);
         details.requestHeaders.splice(i, 1);
       }
       break;
+    }
+  }
+
+  // delete the Cookie header from all search requests
+  if ( (details.url.indexOf(this.C_PROXY_SEARCH)<0) && this.isProxyTab(details.tabId) && (this.proxy_tabs[details.tabId].current_page.indexOf(this.C_PROXY_SEARCH)>=0) ){
+    for (var i=0; i<details.requestHeaders.length; ++i) {
+      if (details.requestHeaders[i].name.toLowerCase() === 'cookie') {
+        //console.log("Deleted the Cookie header", "tabId:", details.tabId, "from:", details.url);
+        //console.log(details.requestHeaders[i].value);
+        details.requestHeaders.splice(i, 1);
+        break;
+      }
     }
   }
 
@@ -122,6 +140,25 @@ DMSP1.prototype.onWebRequestBeforeSendHeaders = function(details) {
 
   return {requestHeaders: details.requestHeaders};
 };
+
+DMSP1.prototype.onWebRequestHeadersReceived = function(details) {
+  //console.log('%c WebRequest.onHeadersReceived:', 'color: #FF07FA; background: #000000');
+  //console.log(details.url);
+
+  // received XDHR from search servers
+  var tabObj = this.proxy_tabs[details.tabId];
+  if (tabObj && details.url.indexOf(this.C_PROXY_SEARCH+"/search")>=0) { 
+    for (var i=0; i<details.responseHeaders.length; ++i) {
+      var objHeader = details.responseHeaders[i];
+      if (objHeader && (objHeader.name.toLowerCase() === this.XDHR.name.toLowerCase())) {
+        this.XDHR.value = objHeader.value;
+        //console.log(objHeader);
+      }
+    }
+  }
+
+  return {responseHeaders: details.responseHeaders};
+}
 
 DMSP1.prototype.onWebRequestCompleted = function(details) {
   //console.log('%c WebReq.onCompleted:', 'color: #FF07FA; background: #000000');
@@ -168,24 +205,6 @@ DMSP1.prototype.onWebCompleted = function(details) {
   if (details.tabId > 0)
     this.injectJsInSearchForm(details.tabId, details.url, details.type);
 };
-
-DMSP1.prototype.onWebRequestHeadersReceived = function(details) {
-  //console.log('%c WebRequest.onHeadersReceived:', 'color: #FF07FA; background: #000000');
-  //console.log(details.url);
-
-  // received XDHR from search servers
-  var tabObj = this.proxy_tabs[details.tabId];
-  //if (tabObj && (tabObj.preset_in_progress == true)) {
-  if (tabObj && details.url.indexOf(this.C_PROXY_SEARCH+"/search") >= 0) { 
-    for (var i = 0; i < details.responseHeaders.length; ++i) {
-      var objHeader = details.responseHeaders[i];
-      if (objHeader && (objHeader.name === this.XDHR.name)) {
-        this.XDHR.value = objHeader.value;
-        //console.log(objHeader);
-      }
-    }
-  }
-}
 
 DMSP1.prototype.onWebCreatedNavigationTarget = function(details) {
   //console.log('%c WebNav.onCreatedNavigationTarget:', 'color: #FF07FA; background: #000000');
@@ -281,12 +300,15 @@ DMSP1.prototype.injectJsInSearchForm = function(tabId, url, type) {
   // Access Search Page Enginer without params
   if (type == 'main_frame' || type == undefined) {
     var found = false;
-    var isDisconnect = (url.indexOf(this.C_PROXY_SEARCH)>=0);
-    if (new RegExp("www.google.").test(url)) found = true;
-    else if (new RegExp(".bing.com").test(url)) found = true;
-    else if (new RegExp(".yahoo.com").test(url)) found = true;
-    else if (new RegExp("blekko.com").test(url)) found = true;
-    else if (new RegExp("duckduckgo.com").test(url)) found = true;
+    var CHILD_DOMAIN = this.BACKGROUND.getHostname(url);
+
+    if (CHILD_DOMAIN.indexOf(".google.")>=0) found = true;
+    else if (CHILD_DOMAIN.indexOf("bing.com")>=0) found = true;
+    else if (CHILD_DOMAIN.indexOf("yahoo.com")>=0) found = true;
+    else if (CHILD_DOMAIN.indexOf("blekko.com")>=0) found = true;
+    else if (CHILD_DOMAIN.indexOf("duckduckgo.com")>=0) found = true;
+
+    var isDisconnect = (CHILD_DOMAIN.indexOf(this.C_PROXY_SEARCH)>=0);
     if (found && !isDisconnect) {
       var jsCode = "";
       //jsCode += "$(document).ready(function() {"
