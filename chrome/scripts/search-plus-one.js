@@ -5,7 +5,6 @@ function DMSP1() {
   // variables
   this.C_PROXY_INVISIBLE = "invisible.disconnect.me:3000";
   this.C_PROXY_PRESETTING = "search.disconnect.me/activation";
-  this.C_PROXY_REDIRECT = "disconnect.me/search";
   this.C_PROXY_SEARCH = "search.disconnect.me";
 
   // configuration to set our proxy server
@@ -17,6 +16,8 @@ function DMSP1() {
             "}"
       }
   };
+
+  this.page_focus = false;
                     
   // configuration to clear our proxy server 
   this.config_direct = { mode: "direct" };
@@ -158,7 +159,7 @@ DMSP1.prototype.onWebRequestHeadersReceived = function(details) {
   }
 
   return {responseHeaders: details.responseHeaders};
-}
+};
 
 DMSP1.prototype.onWebRequestCompleted = function(details) {
   //console.log('%c WebReq.onCompleted:', 'color: #FF07FA; background: #000000');
@@ -242,6 +243,11 @@ DMSP1.prototype.onWebTabReplaced = function(details) {
   });
 
   //console.log(this.proxy_tabs);
+};
+
+DMSP1.prototype.onTabCreated = function(tab) {
+  //console.log('%c TAB.onCreated', 'color: #FF07FA; background: #000000');
+  this.page_focus = false;
 };
 
 DMSP1.prototype.onTabRemoved = function(tabId, removeInfo) {
@@ -445,7 +451,7 @@ DMSP1.prototype.matchesCurrentProxyUrl = function(tabId, url) {
 };
 
 DMSP1.prototype.isProxyUrl = function(url) {
-  return (url != null) ? (url.indexOf(this.C_PROXY_REDIRECT)>=0 || (url.indexOf(this.C_PROXY_SEARCH)>=0 && url.indexOf(this.C_PROXY_PRESETTING)<0)) : false;
+  return (url != null) ? ((url.indexOf(this.C_PROXY_SEARCH)>=0 && url.indexOf(this.C_PROXY_PRESETTING)<0)) : false;
 };
 
 DMSP1.prototype.isProxySearchUrl = function(url) {
@@ -564,7 +570,12 @@ DMSP1.prototype.updateIcon = function(enabled) {
 
 // Message communication
 DMSP1.prototype.onRuntimeMessage = function(request, sender, sendResponse) {
-  if (request.secure_reminder_show == false) {
+  if (request.page_focus == false || request.page_focus == true) {
+    if (sender.tab && sender.tab.active == true) {
+      this.page_focus = request.page_focus;
+      //console.log("Focus in prototypeage:", this.page_focus);
+    }
+  } else if (request.secure_reminder_show == false) {
       localStorage['secure_reminder_show'] = deserialize(request.secure_reminder_show);
   }
 };
@@ -606,8 +617,9 @@ DMSP1.prototype.loadListeners = function(context){
   chrome.webNavigation.onCompleted.addListener(context.onWebCompleted.bind(context));
   chrome.webNavigation.onCreatedNavigationTarget.addListener(context.onWebCreatedNavigationTarget.bind(context));
   chrome.webNavigation.onTabReplaced.addListener(context.onWebTabReplaced.bind(context));
-  chrome.tabs.onActivated.addListener(context.onTabActivated.bind(context));
+  chrome.tabs.onCreated.addListener(context.onTabCreated.bind(context));
   chrome.tabs.onRemoved.addListener(context.onTabRemoved.bind(context));
+  chrome.tabs.onActivated.addListener(context.onTabActivated.bind(context));
   chrome.tabs.onHighlighted.addListener(context.onTabHighlighted.bind(context));
   chrome.management.onUninstalled.addListener(context.onMgmUninstalled.bind(context));
   chrome.management.onDisabled.addListener(context.onMgmDisabled.bind(context));

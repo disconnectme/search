@@ -51,7 +51,7 @@ function deserialize(object) {
 /* Traps and selectively cancels or redirects a request. */
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
   const PROXY_REDIRECT_BY_PRESETTING = "https://" + bgPlusOne.C_PROXY_PRESETTING;
-  const PROXY_REDIRECT = "https://" + bgPlusOne.C_PROXY_REDIRECT;
+  const PROXY_REDIRECT = "https://" + bgPlusOne.C_PROXY_SEARCH + "/search";
   const REGEX_URL = /[?|&]q=(.+?)(&|$)/;
   const REGEX_URL_YAHOO = /[?|&]p=(.+?)(&|$)/;
   const TYPE = details.type;
@@ -89,9 +89,15 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   // Search proxied
   var modeSettings = deserialize(localStorage['mode_settings']);
   //var isSecureMode = (deserialize(localStorage['secure_search']) == true);
+  var isOmniboxSearch = (bgPlusOne.page_focus == false);
   var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
   var isSearchByPopUp = new RegExp("search_plus_one=popup").test(REQUESTED_URL);
-  var isProxied = ( ((modeSettings == 0) && isSearchByPopUp) || ((modeSettings == 1) && !isSearchByPage) || (modeSettings >= 2) );
+  var isProxied = ( 
+    (modeSettings == 0 && isSearchByPopUp) ||
+    (modeSettings == 1 && (isSearchByPopUp || isOmniboxSearch)) ||
+    (modeSettings == 2 && (isSearchByPopUp || isOmniboxSearch || isSearchByPage)) ||
+    (modeSettings >= 0 && (bgPlusOne.isProxyTab(details.tabId) && bgPlusOne.proxy_actived) )
+  );
 
   // blocking autocomplete by OminiBox or by Site URL
   var isChromeInstant = ( isGoogle && T_MAIN_FRAME && (REQUESTED_URL.search("chrome-instant") > -1) );
@@ -101,7 +107,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   var isBingSiteSearch = ( (isBing || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
   var isBlekkoSearch = ( (isBlekko || isDisconnect) && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
   var isYahooSearch = ( (isYahoo || isDisconnect) && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
-  if ( (isProxied || isDisconnect) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
+  if ( (isProxied || isDisconnect || modeSettings==2) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
     blocking = true;
     if (!isDisconnect) {
       if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
@@ -169,7 +175,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
     //console.log(details);
 
     // BEGIN - HACK blekko redirect - only FORM use
-    if (isProxied && T_SCRIPT && isBlekko && hasWsOrApi && modeSettings != 1) {
+    if (modeSettings==2 && T_SCRIPT && isBlekko && hasWsOrApi) {
         var jsCode = "window.location = '" + REQUESTED_URL + '&search_plus_one=form'+ "';";
         chrome.tabs.executeScript(details.tabId, {code: jsCode, runAt: "document_start"}, function(){});
     }
@@ -194,11 +200,16 @@ function buildParameters(requested_url, searchEngineName){
   
   var excludeParam = new Array;
   var url_params = "/?s=" + C_MN +  "&se=" + searchEngineName;
+  var alreadyHasQ = false;
 
   for (var i=0; i<parameters.length; i++) {
     var aux = parameters[i].split("=");
-    if(aux[0] == "q" || aux[0] == "p") aux[1] = aux[1].replace(/'/g, "%27");
-    paramJSON[aux[0]] = aux[1];
+    if (aux[0] == "q" || aux[0] == "p") {
+      if (searchEngineName == 'yahoo') aux[0] = "q";
+      aux[1] = aux[1].replace(/'/g, "%27");
+    }
+    if(!alreadyHasQ) paramJSON[aux[0]] = aux[1];
+    if(aux[0] == "q") alreadyHasQ = true;
   }
   for (var i=0; i<excludeParam.length; i++) {
     delete paramJSON[excludeParam[i]];
@@ -209,11 +220,9 @@ function buildParameters(requested_url, searchEngineName){
 
   if (searchEngineName == 'google') {
     if (requested_url.search("/maps")>-1)
-    url_params += "&tbm=maps";
-  }else if (searchEngineName == 'yahoo') {
-    url_params = url_params.replace("&p=", "&q=");
+      url_params += "&tbm=maps";
   }
-
+  
   return url_params;
 };
 
@@ -264,4 +273,3 @@ reportUsage();
 
 // Try to run report every hour - it will only run every 24 hours.
 setInterval(reportUsage, 60 * 60 * 1000);
-

@@ -27,7 +27,6 @@ this.proxy_tabs = [];
 
 this.C_PROXY_INVISIBLE = "invisible.disconnect.me";
 this.C_PROXY_PRESETTING = "search.disconnect.me/presetting";
-this.C_PROXY_REDIRECT = "disconnect.me/search";
 this.C_PROXY_SEARCH = "search.disconnect.me";
 
 this.C_MN = "d2hhdGlmaWRpZHRoaXMx";
@@ -48,6 +47,7 @@ this.requestID = 0;
 this.last_tab_actived = 0;
 this.current_search = 0;
 
+this.page_focus = false;
 this.XDHR = {name: 'X-Disconnect-Auth', value: 'none'};
 this.channelRedirect = true;
 this.enablePresetting = false;
@@ -167,10 +167,14 @@ var disconnectSearch = Class({
       if (T_MAIN_FRAME) logger.console("shouldLoad: ", REQUESTED_URL, aContentType);
 
       var modeSettings = deserialize(localStorage['mode_settings']);
+      var isOmniboxSearch = (page_focus == false);
       var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
       var isSearchByPopUp = new RegExp("search_plus_one=popup").test(REQUESTED_URL);
-      var isProxied = ( ((modeSettings == 0) && isSearchByPopUp) || ((modeSettings == 1) && !isSearchByPage) || (modeSettings >= 2) );
-      //logger.console(" modeSettings: " + modeSettings + " byPage: " + isSearchByPage + " byPopup: " + isSearchByPopUp + " isProxie: " + isProxied);
+      var isProxied = ( 
+        (modeSettings == 0 && isSearchByPopUp) ||
+        (modeSettings == 1 && (isSearchByPopUp || isOmniboxSearch)) ||
+        (modeSettings == 2 && (isSearchByPopUp || isOmniboxSearch || isSearchByPage) )
+      );
 
       var isDisconnect = (REQUESTED_URL.indexOf(C_PROXY_SEARCH) >= 0);
       var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
@@ -191,7 +195,7 @@ var disconnectSearch = Class({
       if (isDisconnectSearchPage) updatestats();
 
       // blocking autocomplete by OminiBox or by Site URL
-      if ( (isProxied || isDisconnect) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
+      if ( (isProxied || isDisconnect || modeSettings==2) && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch) ) {
         var blocking = true;
         if (!isDisconnect) {
           if ( (modeSettings==1) && !isGoogleOMBSearch ) blocking = false;
@@ -335,7 +339,7 @@ function onHttpModifyRequest(channel) {
 
     /* Traps and selectively cancels or redirects a request. */
     const PROXY_REDIRECT_BY_PRESETTING = "https://" + C_PROXY_PRESETTING;
-    const PROXY_REDIRECT = "https://" + C_PROXY_REDIRECT;
+    const PROXY_REDIRECT = "https://" + C_PROXY_SEARCH + "/search";
 
     const REGEX_URL = /[?|&]q=(.+?)(&|$)/;
     const REGEX_URL_YAHOO = /[?|&]p=(.+?)(&|$)/;
@@ -352,13 +356,19 @@ function onHttpModifyRequest(channel) {
     var isDisconnect = (REQUESTED_URL.indexOf(C_PROXY_SEARCH) >= 0);
 
     // Search proxied
+    var isOmniboxSearch = (page_focus == false);
     var modeSettings = deserialize(localStorage['mode_settings']);
     var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
     var isSearchByPopUp = new RegExp("search_plus_one=popup").test(REQUESTED_URL);
-    var isProxied = ( ((modeSettings == 0) && isSearchByPopUp) || ((modeSettings == 1) && !isSearchByPage) || (modeSettings >= 2) );
-    
+    var isProxied = ( 
+      (modeSettings == 0 && isSearchByPopUp) ||
+      (modeSettings == 1 && (isSearchByPopUp || isOmniboxSearch)) ||
+      (modeSettings == 2 && (isSearchByPopUp || isOmniboxSearch || isSearchByPage)) ||
+      (modeSettings >= 0 && (isProxyTab(browser._disconnectID) && isActiveProxy()) )
+    );
+
     // Redirect URL -> Proxied
-    if (isProxied && (PARENT) && ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo)) {
+    if (isProxied && PARENT && ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo)) {
       logger.console("Search by OminiBox");
 
       // get query in URL string
@@ -412,7 +422,7 @@ function onHttpModifyRequest(channel) {
       //logger.console("No Search by OminiBox Just pass through plus one");
 
       // BEGIN - HACK blekko redirect - only FORM use
-      if (isProxied && !PARENT && /jQuery?/.test(REQUESTED_URL) && isBlekko && hasWsOrApi && modeSettings != 1) { //&& T_SCRIPT
+      if (modeSettings==2 && !PARENT && /jQuery?/.test(REQUESTED_URL) && isBlekko && hasWsOrApi) { //&& T_SCRIPT
         logger.console("FOUND BLEKKO HACK", REQUESTED_URL);
         var dcm = getDocumentFromChannel(channel);
         if (dcm) {
@@ -601,7 +611,6 @@ function getBrowserFromChannel(aChannel) {
   }
 };
 
-
 function getDocumentFromChannel(aChannel) {
   try {
     var notificationCallbacks = aChannel.notificationCallbacks ? aChannel.notificationCallbacks : aChannel.loadGroup.notificationCallbacks;
@@ -668,7 +677,7 @@ function onTabReady() {
   }
 
   logger.console(JSON.stringify(proxy_tabs));
-}
+};
 
 function onTabRemoved(event) {
   logger.console("TAB.onRemoved");
@@ -776,26 +785,31 @@ function cloneTabObject(tabIdSrc, tabIdDst, withTabSrcDelete) {
 function buildParameters(requested_url, searchEngineName){
   var paramJSON = {};
   var parameters = requested_url.split("?")[1].split("&");
-  var excludeParam = new Array;//["q"];
+  
+  var excludeParam = new Array;
   var url_params = "/?s=" + C_MN +  "&se=" + searchEngineName;
-
-  for( var i = 0; i < parameters.length; i++){
+  var alreadyHasQ = false;
+  
+  for (var i=0; i<parameters.length; i++) {
     var aux = parameters[i].split("=");
-    if(aux[0] == "q" || aux[0] == "p") aux[1] = aux[1].replace(/'/g, "%27");
-    paramJSON[aux[0]] = aux[1];
+    if (aux[0] == "q" || aux[0] == "p") {
+      if (searchEngineName == 'yahoo') aux[0] = "q";
+      aux[1] = aux[1].replace(/'/g, "%27");
+    }
+    if(!alreadyHasQ) paramJSON[aux[0]] = aux[1];
+    if(aux[0] == "q") alreadyHasQ = true;
   }
-  for( var i = 0; i < excludeParam.length; i++){
+  for (var i=0; i<excludeParam.length; i++) {
     delete paramJSON[excludeParam[i]];
   }
-  for(var x in paramJSON){
+  
+  for(var x in paramJSON) {
     url_params += "&" + x + "=" + paramJSON[x];
   }
-  
+
   if (searchEngineName == 'google') {
     if (requested_url.search("/maps")>-1)
       url_params += "&tbm=maps";
-  }else if (searchEngineName == 'yahoo') {
-      url_params = url_params.replace("&p=", "&q=");
   }
 
   return url_params;
@@ -852,7 +866,7 @@ function removeProxyTab(tabId) {
 };
 
 function isProxyUrl(url) {
-  return (url != null) ? (url.indexOf(C_PROXY_REDIRECT)>=0 || (url.indexOf(C_PROXY_SEARCH)>=0 && url.indexOf(C_PROXY_PRESETTING)<0)) : false;
+  return (url != null) ? ((url.indexOf(C_PROXY_SEARCH)>=0 && url.indexOf(C_PROXY_PRESETTING)<0)) : false;
 };
 
 function isProxyTab(tabId) {
@@ -892,12 +906,13 @@ function setProxy() {
 function removeProxy() {
   logger.console("DEACTIVED: PROXY");
 
-  Services.prefs.setIntPref("network.proxy.type", 0); // DIRECT
+  loadOriginalPrefs();
+  
   updateIcon(false);
 };
 
 function isActiveProxy() {
-  return (Services.prefs.getIntPref("network.proxy.type") != 0);
+  return ((Services.prefs.getIntPref("network.proxy.type") == 1) && (Services.prefs.getCharPref("network.proxy.http") == config_proxied.host));
 };
 
 function updateIcon(enabled) {
@@ -914,22 +929,31 @@ function getMostRecentWindow() {
 };
 
 function barFocusSearch(window) {
+  var content = window.document.getElementById('content');
+  var searchbar = window.document.getElementById('searchbar');
   var urlbar = window.document.getElementById('urlbar');
+
+  if (content) {
+    content.addEventListener('click', function() {
+      page_focus = true;
+    });
+    content.onkeypress = function() {
+      page_focus = true;
+    };
+  }
+
   if (urlbar) {
     urlbar.onfocus = function() {
       current_search = C_OMNIBOX_SEARCH;
-
+      page_focus = false;
       //logger.console("FOCUS URLBAR", current_search);
     };
-
-    //urlbar.onblur = function() { logger.console("BLUR URLBAR", current_search); };
   }
 
-  var searchbar = window.document.getElementById('searchbar');
   if (searchbar) {
     searchbar.onfocus = function() {
       current_search = C_FIREFOX_SEARCH;
-
+      page_focus = false;
       var modeSettings = deserialize(localStorage['mode_settings']);
       if (modeSettings >= 1) { // private omnibox or everywhere
         var CHILD_DOMAIN = Services.search.defaultEngine.searchForm;
@@ -947,13 +971,10 @@ function barFocusSearch(window) {
       } else {
         Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
       }
-
       //logger.console("FOCUS SEARCHBAR", current_search);
     };
-
-    //searchbar.onblur = function(){ logger.console("BLUR SEARCHBAR", current_search); };
   }
-}
+};
 
 function injectGoogleForm() {
   var jsgoogle = "";
@@ -978,7 +999,7 @@ function pinterestResquest() {
       logger.console("request Pinterest");
     }
   }).get();
-}
+};
 
 function saveOriginalPrefs() {
   var ffPreferences = {
@@ -1001,7 +1022,7 @@ function saveOriginalPrefs() {
   localStorage['ffPreferences'] = JSON.stringify(ffPreferences);
 }
 
-exports.restoreOriginalPrefs = function() {
+function loadOriginalPrefs(){
   var prefs = JSON.parse(localStorage['ffPreferences']);
 
   Services.prefs.setCharPref("network.proxy.http", prefs.proxy.http);
@@ -1015,6 +1036,10 @@ exports.restoreOriginalPrefs = function() {
   Services.prefs.setIntPref("network.proxy.type", prefs.proxy.type);
 
   Services.prefs.setBoolPref("browser.search.suggest.enabled", prefs.search.suggestEnabled);
+};
+
+exports.restoreOriginalPrefs = function() {
+  loadOriginalPrefs();
 };
 
 exports.removeProxyUnload = function() {
@@ -1050,10 +1075,10 @@ exports.loadListeners = function(context) {
 
   pinterestResquest();
 
-  /* investigate */
   /*
-  //events.on("http-on-modify-request", onHttpModifyRequest);
-  //events.on("http-on-examine-response", onHttpExamineRespose);
+  // investigate
+  events.on("http-on-modify-request", onHttpModifyRequest);
+  events.on("http-on-examine-response", onHttpExamineRespose);
   events.on("http-on-opening-request", onHttpOpeningRequest);
   events.on("http-on-examine-cached-response", onHttpExamineCachedResponse);
   events.on("http-on-examine-merged-response", onHttpExamineMergedResponse);
@@ -1063,17 +1088,17 @@ exports.loadListeners = function(context) {
 function onHttpOpeningRequest(event) {
   var channel = event.subject.QueryInterface(Ci.nsIHttpChannel);
   var REQUESTED_URL = channel.URI.spec;
-  //logger.console("Http-on-Opening-Request: ", REQUESTED_URL);
+  logger.console("Http-on-Opening-Request: ", REQUESTED_URL);
 };
 function onHttpExamineCachedResponse(event) {
   var channel = event.subject.QueryInterface(Ci.nsIHttpChannel);
   var REQUESTED_URL = channel.URI.spec;
-  //logger.console("Http-on-Examine-Cached-Response: ", REQUESTED_URL);
+  logger.console("Http-on-Examine-Cached-Response: ", REQUESTED_URL);
 };
 function onHttpExamineMergedResponse(event) {
   var channel = event.subject.QueryInterface(Ci.nsIHttpChannel);
   var REQUESTED_URL = channel.URI.spec;
-  //logger.console("Http-on-Examine-Merged-Response: ", REQUESTED_URL);
+  logger.console("Http-on-Examine-Merged-Response: ", REQUESTED_URL);
 };
 
 function onWindowOpen(){
@@ -1092,7 +1117,7 @@ function getCurrentTabActived() {
   var activeTab = tabUtils.getActiveTab(getMostRecentWindow());
   var browserActiveTab = tabUtils.getBrowserForTab(activeTab);
   return browserActiveTab;
-}
+};
 
 function onWindowActivate(){
   var browserActiveTab = getCurrentTabActived();

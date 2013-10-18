@@ -100,23 +100,19 @@ window.onload = function() {
     TXT_SEARCH.focus();
   };
 
-  function escapeSearchQuery(q) {
-    return encodeURIComponent(q);
-  };
-
   function btnSearchClick() {
     const PREFIX_URL = "https://";
     var searchEngineIndex = DESERIALIZE(localStorage[SEARCH_ENGINE_LABEL]);
     var uri = null;
 
-    if (searchEngineIndex == 0) uri = 'www.google.com/search/?q=';
-    else if (searchEngineIndex == 1) uri = 'us.bing.com/search/?q=';
-    else if (searchEngineIndex == 2) uri = 'search.yahoo.com/search/?p=';
-    else if (searchEngineIndex == 3) uri = 'blekko.com/ws/?q=';
+    if (searchEngineIndex == 0) uri = 'www.google.com/search?q=';
+    else if (searchEngineIndex == 1) uri = 'us.bing.com/search?q=';
+    else if (searchEngineIndex == 2) uri = 'search.yahoo.com/search?p=';
+    else if (searchEngineIndex == 3) uri = 'blekko.com/ws?q=';
     else if (searchEngineIndex == 4) uri = 'duckduckgo.com/?q=';
 
     chrome.tabs.create({
-      url: PREFIX_URL + uri + escapeSearchQuery(TXT_SEARCH.val()) + '&search_plus_one=popup'
+      url: PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup'
     });
   };
 

@@ -38,7 +38,7 @@
   },
   "content_scripts": [{
     "matches": ["http://*/*", "https://*/*"],
-    "js": [ "scripts/vendor/jquery/jquery.js"],
+    "js": ["scripts/focus.js", "scripts/vendor/jquery/jquery.js"],
     "run_at": "document_start",
     "all_frames": true
   }],

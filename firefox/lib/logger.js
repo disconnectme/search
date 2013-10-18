@@ -70,11 +70,11 @@ function getfullPathToFile() {
   var saveDirectory = homeDir.path;
 
   var fileSeparator = "\\";  
-  if (system.platform.indexOf("linu") != -1) fileSeparator = "/";
-
+  if (system.platform.indexOf("linu") != -1 || system.platform.indexOf("darwin") != -1)
+    fileSeparator = "/";
+  
   var fileName = "searchLog.txt";
   var fullPathToFile = saveDirectory + fileSeparator + fileName;
-
   return fullPathToFile;
 };
 

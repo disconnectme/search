@@ -49,7 +49,6 @@ searchPanel.port.on("email", function createTab(url) {
   windows.browserWindows.activeWindow.tabs.activeTab.url = url;
 });
 
-
 searchPanel.port.on("setLocalStorage", function setLocalStorage(key, value) {
  localStorage[key] = value;
 });
@@ -85,6 +84,7 @@ exports.main = function(options, callbacks) {
     localStorage['omnibox'] = "true";     // private search in ominibox
     localStorage['everywhere'] = "false"; // private search everywhere
     localStorage['versionInstaled'] = self.version;
+
     Request({url:"http://goldenticket.disconnect.me/search"}).get();
   }
 
