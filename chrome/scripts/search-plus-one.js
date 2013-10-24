@@ -31,6 +31,9 @@ function DMSP1() {
 
   // variables proxy_actived
   this.proxy_actived = false;
+  
+  // variable to fix the 403 Forbidden problem on chrome startup
+  this.startup_verify = true;
 
   // send value in header: X-Disconnect-Auth: 'value'
   this.XDHR = {name: 'X-Disconnect-Auth', value: 'none'};
@@ -39,7 +42,7 @@ function DMSP1() {
   if (deserialize(localStorage['development_mode']) == true) {
     this.iconChange = this.sendXDIHR = true;
   }
-}
+};
 
 DMSP1.prototype.onWebBeforeRequest = function(details) {
   const PARENT = details.type == 'main_frame';
@@ -248,6 +251,15 @@ DMSP1.prototype.onWebTabReplaced = function(details) {
 DMSP1.prototype.onTabCreated = function(tab) {
   //console.log('%c TAB.onCreated', 'color: #FF07FA; background: #000000');
   this.page_focus = false;
+};
+
+// function to reload and hide the Forbidden at chrome startup
+DMSP1.prototype.onTabUpdated = function(tabId, changeInfo, tab) {
+  //console.log('%c TAB.onUpdated', 'color: #FF07FA; background: #000000');
+  if (tab.title.indexOf("Forbidden")>=0 && this.startup_verify) {
+    chrome.tabs.insertCSS(tabId, {code: "body {display: none;}"}, function(){});
+    chrome.tabs.reload(tabId);
+  }
 };
 
 DMSP1.prototype.onTabRemoved = function(tabId, removeInfo) {
@@ -522,7 +534,6 @@ DMSP1.prototype.setProxyTimer = function() {
 // set the proxy
 DMSP1.prototype.setProxy = function() {
   var context = this;
-
   this.proxy_actived = true;
   this.resetProxyTimer();
   chrome.proxy.settings.set({value: this.config_proxied, scope: 'regular'}, function() {
@@ -536,6 +547,7 @@ DMSP1.prototype.removeProxy = function() {
   var context = this;
 
   this.resetProxyTimer();
+
   chrome.proxy.settings.set({value: this.config_direct, scope: 'regular'}, function() {
     context.proxy_actived = false;
     context.updateIcon(false);
@@ -580,6 +592,14 @@ DMSP1.prototype.onRuntimeMessage = function(request, sender, sendResponse) {
   }
 };
 
+//Function to cancel the startup verifications
+DMSP1.prototype.onExtensionStartup = function() {
+  var context = this;
+  setTimeout(function() {
+      context.startup_verify = false;
+  }, 10000);
+};
+
 DMSP1.prototype.onWindowsFocusChanged = function(windowId) {
   //console.log('%c Windows.onFocusChanged:', 'color: #FF07FA; background: #000000');
 
@@ -608,6 +628,7 @@ DMSP1.prototype.onWindowsFocusChanged = function(windowId) {
 DMSP1.prototype.loadListeners = function(context){
   //console.log('%c Load Listerners', 'color: #FF07FA; background: #000000');
   context.removeProxy();
+  
   this.proxy_tabs = [];
 
   var runtimeOrExtension = chrome.runtime && chrome.runtime.sendMessage ? 'runtime' : 'extension';
@@ -621,9 +642,11 @@ DMSP1.prototype.loadListeners = function(context){
   chrome.tabs.onRemoved.addListener(context.onTabRemoved.bind(context));
   chrome.tabs.onActivated.addListener(context.onTabActivated.bind(context));
   chrome.tabs.onHighlighted.addListener(context.onTabHighlighted.bind(context));
+  chrome.tabs.onUpdated.addListener(context.onTabUpdated.bind(context));
   chrome.management.onUninstalled.addListener(context.onMgmUninstalled.bind(context));
   chrome.management.onDisabled.addListener(context.onMgmDisabled.bind(context));
 
   chrome.windows.onFocusChanged.addListener(context.onWindowsFocusChanged.bind(context));
   chrome[runtimeOrExtension].onMessage.addListener(context.onRuntimeMessage.bind(context));
+  chrome[runtimeOrExtension].onStartup.addListener(context.onExtensionStartup.bind(context));
 };

@@ -367,6 +367,34 @@ function onHttpModifyRequest(channel) {
       (modeSettings >= 0 && (isProxyTab(browser._disconnectID) && isActiveProxy()) )
     );
 
+    if(isProxied && isBlekko && hasWsOrApi){
+      try{
+        var isImages = new RegExp("/images").test(REQUESTED_URL);
+        var isVideo = new RegExp("/videos").test(REQUESTED_URL);
+        var parameter = "";
+        
+        if( (modeSettings==2) && isSearchByPage ){
+          var beginParameter = REQUESTED_URL.indexOf("?q=") + 3;
+          var endParamter =  REQUESTED_URL.indexOf("&");
+          parameter = REQUESTED_URL.substring(beginParameter, endParamter);
+        }else{
+          var beginParameter = REQUESTED_URL.indexOf("ws/") + 3;
+          var endParamter =  REQUESTED_URL.lastIndexOf("/");
+          if(!isImages && !isVideo) endParamter =  REQUESTED_URL.length;
+          parameter = REQUESTED_URL.substring(beginParameter, endParamter);
+        }
+        
+        if(isImages){
+           REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter + " /images"
+        }else
+        if(isVideo){
+          REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter + " /videos"
+        }else if(!isOmniboxSearch){
+          REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter;
+        }
+      }catch(eiu){}
+    }
+
     // Redirect URL -> Proxied
     if (isProxied && PARENT && ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo)) {
       logger.console("Search by OminiBox");
@@ -787,7 +815,10 @@ function buildParameters(requested_url, searchEngineName){
   var parameters = requested_url.split("?")[1].split("&");
   
   var excludeParam = new Array;
-  var url_params = "/?s=" + C_MN +  "&se=" + searchEngineName;
+  var url_params = "/?s=" + C_MN;
+  if(requested_url.indexOf("se=") == -1)
+      url_params += "&se=" + searchEngineName;
+  
   var alreadyHasQ = false;
   
   for (var i=0; i<parameters.length; i++) {

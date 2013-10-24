@@ -59,7 +59,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
   const T_OTHER = (TYPE == 'other');
   const T_SCRIPT = (TYPE == 'script');
   const T_XMLHTTPREQUEST = (TYPE == 'xmlhttprequest');
-  const REQUESTED_URL = details.url;
+  var REQUESTED_URL = details.url;
   const CHILD_DOMAIN = getHostname(REQUESTED_URL);
 
   var blockingResponse = {cancel: false};
@@ -117,6 +117,34 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
     if (blocking) {
       blockingResponse = { cancel: true };
     }
+  }
+
+  if(isProxied && isBlekko && hasWsOrApi){
+    try{
+      console.log(REQUESTED_URL);
+      var isImages = new RegExp("/images").test(REQUESTED_URL);
+      var isVideo = new RegExp("/videos").test(REQUESTED_URL);
+      var parameter = "";
+      
+      if( (modeSettings==2)  && isSearchByPage ){
+       var beginParameter = REQUESTED_URL.toString().indexOf("?q=") + 3;
+       var endParamter =  REQUESTED_URL.toString().indexOf("&");
+       parameter = REQUESTED_URL.toString().substring(beginParameter, endParamter);
+      }else{
+        var beginParameter = REQUESTED_URL.toString().indexOf("ws/") + 3;
+        var endParamter =  REQUESTED_URL.toString().length;
+        if(isImages || isVideo) endParamter =  REQUESTED_URL.toString().lastIndexOf("/")-1;
+        parameter = REQUESTED_URL.toString().substring(beginParameter, endParamter);
+      }
+      if(isImages){
+         REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter + " /images"
+      }else
+      if(isVideo){
+          REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter + " /videos";
+      }else if(!isOmniboxSearch){
+         REQUESTED_URL = PROXY_REDIRECT + "?se=blekko&q=" + parameter;
+      }
+    }catch(eiu){ }
   }
 
   // Redirect URL -> Proxied
@@ -199,7 +227,11 @@ function buildParameters(requested_url, searchEngineName){
   var parameters = requested_url.split("?")[1].split("&");
   
   var excludeParam = new Array;
-  var url_params = "/?s=" + C_MN +  "&se=" + searchEngineName;
+  var url_params = "/?s=" + C_MN;
+  
+  if(requested_url.indexOf("se=") == -1)
+    url_params += "&se=" + searchEngineName;
+
   var alreadyHasQ = false;
 
   for (var i=0; i<parameters.length; i++) {
