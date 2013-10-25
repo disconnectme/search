@@ -646,6 +646,10 @@ DMSP1.prototype.loadListeners = function(context){
   chrome.management.onUninstalled.addListener(context.onMgmUninstalled.bind(context));
   chrome.management.onDisabled.addListener(context.onMgmDisabled.bind(context));
 
+  setTimeout(function() {
+    context.startup_verify = false;
+  }, 10000);
+
   chrome.windows.onFocusChanged.addListener(context.onWindowsFocusChanged.bind(context));
   chrome[runtimeOrExtension].onMessage.addListener(context.onRuntimeMessage.bind(context));
   chrome[runtimeOrExtension].onStartup.addListener(context.onExtensionStartup.bind(context));
