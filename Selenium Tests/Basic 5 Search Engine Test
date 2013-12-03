@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://www.google.com/" />
+<title>Basic 5 Search Engine Test</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">Basic 5 Search Engine Test</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>https://search.disconnect.me/search/?s=d2hhdGlmaWRpZHRoaXMx&amp;se=google&amp;site=&amp;source=hp&amp;q=herp+derp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>id=gbqfq</td>
+	<td>herp derp</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>https://search.disconnect.me/search/?s=d2hhdGlmaWRpZHRoaXMx&amp;se=bing&amp;q=herp+derp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>id=sb_form_q</td>
+	<td>herp derp</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>http://search.disconnect.me/search/?s=d2hhdGlmaWRpZHRoaXMx&amp;se=yahoo&amp;q=herp+derp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>id=yschsp</td>
+	<td>herp derp</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>https://search.disconnect.me/search/?s=d2hhdGlmaWRpZHRoaXMx&amp;se=blekko&amp;q=herp%20derp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>id=searchBox</td>
+	<td>herp derp</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>https://search.disconnect.me/search/?s=d2hhdGlmaWRpZHRoaXMx&amp;se=duckduckgo&amp;q=herp+derp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyValue</td>
+	<td>id=search_form_input</td>
+	<td>herp derp</td>
+</tr>
+
+</tbody></table>
+</body>
+</html>
