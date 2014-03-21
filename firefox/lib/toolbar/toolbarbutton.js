@@ -33,7 +33,7 @@
 
 
 const {unload} = require("toolbar/unload+");
-const winUtils = require("window-utils");
+const winUtils = require("sdk/deprecated/window-utils");
 const {listen} = require("toolbar/listen");
 const newWinUtils = require("sdk/window/utils");
 const persist = require("./persist");

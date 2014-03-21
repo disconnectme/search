@@ -8,7 +8,6 @@
     <div id="toolbar">
       <div id="left">
         <span id="dlogo"></span>
-        <span id="search_engine" class="google"></span>
         <input id="txt_search" type="text" value="" name="q" autocomplete="off" size="55" maxlength="255" placeholder="">
         <input id="btn_search" type="submit" value="Search" hidefocus="true" tabindex="-1">
       </div>
@@ -18,38 +17,8 @@
       </div>
     </div>
 
-    <div id="pages" >
+    <div id="pages">
       <div id="settings" actived="false">
-        <div id="search_select">
-          <div class="header">
-            <span>Search engine</span>
-          </div>
-
-          <div class="checkbox">
-            <!-- <input class="search_engines" type="checkbox" value="0" name="se_browser_default" /><span>Browser Default</span><br/>-->
-            <ul>
-              <li class="hint--right" data-hint="Google">
-                <input class="search_engines" type="checkbox" value="0" name="se_google" />
-                <span class="google"></span></li>
-              <li class="hint--right" data-hint="Bing">
-                <input class="search_engines" type="checkbox" value="1" name="se_bing" />
-                <span class="bing"></span>
-              </li>
-              <li class="hint--left" data-hint="Yahoo">
-                <input class="search_engines" type="checkbox" value="2" name="se_yahoo" />
-                <span class="yahoo"></span></li>
-              <li class="hint--left" data-hint="Blekko">
-                <input class="search_engines" type="checkbox" value="3" name="se_blekko" />
-                <span class="blekko"></span>
-              </li>
-              <li class="hint--left" data-hint="DuckDuckGo">
-                <input class="search_engines" type="checkbox" value="4" name="se_duckduckgo" />
-                <span class="duckduckgo"></span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
         <div id="mode_select">
           <div class="header">
             <span>Options</span>
@@ -59,29 +28,18 @@
             <ul>
               <li>
                 <input id="omnibox-box" class="mode_settings" type="checkbox" value="1" name="mode_1">
-            <span>Search from the omnibox</span>
-            <span id="mode1_info" class="whats_this link">?</span></li>
+                <span>Search from the omnibox</span>
+                <span id="mode1_info" class="whats_this link">?</span>
+              </li>
               <li>
                 <input id="everywhere-box" class="mode_settings" type="checkbox" value="2" name="mode_2">
-            <span>Search from everywhere</span>
-            <span id="mode2_info" class="whats_this link">?</span>
-            <span class="beta">Beta</span>
+                <span>Search from everywhere</span>
+                <span id="mode2_info" class="whats_this link">?</span>
+                <span class="beta">Beta</span>
               </li>
             </ul>
           </div>
         </div>
-
-        <!-- <div id="search_mode" class="hide">
-          <div class="header">
-            <span>Proxy Mode</span>
-          </div>
-
-          <div class="checkbox">
-            <input id="private_mode" class="search_mode" type="radio" name="search_mode" value="private" style="margin-bottom:0px">Search Tab Only
-            <span style="margin-left: 20px;"></span>
-            <input id="secure_mode" class="search_mode" type="radio" name="search_mode" value="secure">All Tabs
-          </div>
-        </div> -->
 
       </div>
     </div>
@@ -95,5 +53,3 @@
     </div>
   </form>
 </div>
-  </body>
-</html>

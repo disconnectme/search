@@ -1,39 +1,26 @@
 /* Paints the UI. */
 window.onload = function() {
-  const BACKGROUND = chrome.extension.getBackgroundPage();
-  const DESERIALIZE = BACKGROUND.deserialize;
-  const SEARCH_ENGINE_LABEL = 'search_engines';
+  const BG = chrome.extension.getBackgroundPage();
   const CHK_MODE_SETTINGS_LABEL = 'chk_mode_settings';
-  const TXT_SEARCH = $('#txt_search');
   const TXT_DEFAULT_MESSAGE = 'Search privately';
+  const TXT_SEARCH = $('#txt_search');
 
   initialize();
 
   function initialize() {
-    // set variables in localStorage
-    define_variables();
-
-    // set functions/events
     define_events();
-
-    //temporary omnibox/everywhere/secure usage analytics
     analytics();
-
-    // default values
     defaults_values();
   };
 
-  function define_variables() {
-  };
-
   function define_events() {
+    $('.mode_settings').click(chkModeSettingsClick);
+    $('.checkbox li span').click(spanItemClick);
     $('#btn_search').click(btnSearchClick);
     $('#toolbar_info').click(toolBarInfoClick);
     $('#toolbar_feedback').click(emailSupportClick);
-    $('.checkbox li, .mode_settings').click(checkItem);
-    $('.search_engines').click(chkSearchEngineClick);
-    $('.mode_settings').click(chkModeSettingsClick);
-    $('.search_mode').click(chkModeSettingsClick);
+    $("#frm_search").submit(closePopup);
+
     $('.whats_this').bind({
       mouseenter: showHelpImage,
       mouseleave: hideHelpImage
@@ -41,135 +28,92 @@ window.onload = function() {
     $('.beta').bind({
       mouseenter: bubblePopUp,
       mouseleave: closeBubblePopUp
-    })
-    $('.icone_close').click(iconeCloseClick);
+    });
 
     TXT_SEARCH.focus(function () { $(this).css('background-position', '0px -27px'); });
     TXT_SEARCH.blur(function () { $(this).css('background-position', '0px 0px'); });
   };
 
   function analytics() {
-    //temporary omnibox/everywhere/secure usage analytics
     $('#omnibox-box').click(function() {
-        var omnibox = $('#omnibox-box');
-        if (omnibox.is(':checked')) {
-          $.get("https://disconnect.me/search/omnibox/enabled");
-          localStorage.omnibox = "true";
-        }
-        else {
-          $.get("https://disconnect.me/search/omnibox/disabled");
-          localStorage.omnibox = "false";
-        }
+      var is_checked = $(this).is(':checked');
+      localStorage.search_omnibox = is_checked ? "true" : "false";
+      if (is_checked) {
+        localStorage.search_omnibox_on = parseInt(localStorage.search_omnibox_on) + 1;
+      } else {
+        localStorage.search_omnibox_off = parseInt(localStorage.search_omnibox_off) + 1;
+      }
     });
 
     $('#everywhere-box').click(function() {
-        var everywhere = $('#everywhere-box');
-        if (everywhere.is(':checked')) {
-          $.get("https://disconnect.me/search/everywhere/enabled");
-          localStorage.everywhere = "true";
-        }
-        else {
-          $.get("https://disconnect.me/search/everywhere/disabled");
-          localStorage.everywhere = "false";
-        }
+      var is_checked = $(this).is(':checked');
+      localStorage.search_everywhere = is_checked ? "true" : "false";
+      if (is_checked) {
+        localStorage.search_everywhere_on = parseInt(localStorage.search_everywhere_on) + 1;
+      } else {
+        localStorage.search_everywhere_off = parseInt(localStorage.search_everywhere_off) + 1;
+      }
     });
-
-    TXT_SEARCH.focus(function () { $(this).css('background-position', '0px -27px'); });
-    TXT_SEARCH.blur(function () { $(this).css('background-position', '0px 0px'); });
   };
 
   function defaults_values() {
-    var o_se = $(':input[class="'+SEARCH_ENGINE_LABEL+'"][value="'+ DESERIALIZE(localStorage[SEARCH_ENGINE_LABEL]) +'"]');
-    if (o_se != undefined) {
-      o_se.attr('checked', true).parent().addClass("active");
-      //TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE.format(o_se.next().text()));
-      TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE);
-    }
+    TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE);
 
-    updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
-
-    var chkbox = JSON.parse(localStorage[CHK_MODE_SETTINGS_LABEL]);
+    var chkbox = '{"ominibox":false,"everywhere":false}';
+    try { chkbox = JSON.parse(localStorage[CHK_MODE_SETTINGS_LABEL]); }catch(e){};
     $('#omnibox-box').attr('checked', chkbox['ominibox']);
     $('#everywhere-box').attr('checked', chkbox['everywhere']);
-
-    if (chkbox['secure'] == false)
-      $('#private_mode').attr('checked', true);
-    else
-      $('#secure_mode').attr('checked', true);
 
     TXT_SEARCH.focus();
   };
 
-  function btnSearchClick() {
-    const PREFIX_URL = "https://";
-    var searchEngineIndex = DESERIALIZE(localStorage[SEARCH_ENGINE_LABEL]);
-    var uri = null;
-
-    if (searchEngineIndex == 0) uri = 'www.google.com/search?q=';
-    else if (searchEngineIndex == 1) uri = 'us.bing.com/search?q=';
-    else if (searchEngineIndex == 2) uri = 'search.yahoo.com/search?p=';
-    else if (searchEngineIndex == 3) uri = 'blekko.com/ws?q=';
-    else if (searchEngineIndex == 4) uri = 'duckduckgo.com/?q=';
-
-    chrome.tabs.create({
-      url: PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup'
-    });
-  };
-
-  function chkSearchEngineClick() {
-    var checkbox = $(this),
-        checkbox_class = "." + checkbox.attr("class");
-
-    $(checkbox_class).attr("checked",false).parent().removeClass("active").find("span").removeClass("flipInYGreen animated");
-    // save value in localstorage
-    localStorage[SEARCH_ENGINE_LABEL] = DESERIALIZE(checkbox.attr('value'));
-
-    updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
-
-    // force checked (always true);
-    if (!checkbox.is(':checked'))
-      checkbox.prop('checked', true).parent().addClass("active").find("span").addClass("flipInYGreen animated");
-    };
-
   function chkModeSettingsClick() {
     var omnibox = $('#omnibox-box');
     var everywhere = $('#everywhere-box');
-    var secure = $('#secure_mode');
 
     var chk_box = {
       'ominibox': omnibox.is(':checked'),
-      'everywhere': everywhere.is(':checked'),
-      'secure': secure.is(':checked')
+      'everywhere': everywhere.is(':checked')
     };
     localStorage[CHK_MODE_SETTINGS_LABEL] = JSON.stringify(chk_box);
 
     var mode = 0;
     if (everywhere.is(':checked')) mode = 2;
     else if (omnibox.is(':checked')) mode = 1;
-    localStorage['mode_settings'] = DESERIALIZE(mode);
-
-    if (secure.is(':checked') == true) {
-      if (BACKGROUND.bgPlusOne.hasProxy()) {
-        BACKGROUND.bgPlusOne.setProxy();
-      }
-    } else {
-      chrome.tabs.query({active: true}, function (tabs) {
-        if (!BACKGROUND.bgPlusOne.isProxyTab(tabs[0].id)) {
-          BACKGROUND.bgPlusOne.removeProxy();
-        }
-      });
-    }
-
-    localStorage['secure_search'] = DESERIALIZE(secure.is(':checked'));
+    localStorage['mode_settings'] = mode.toString();
   };
 
-  function bubblePopUp(){
+  function btnSearchClick() {
+    chrome.tabs.create({url: "http://www.google.com/search?q=" + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup'});
+  };
+
+  function toolBarInfoClick() {
+    chrome.tabs.create({url: 'https://disconnect.me/search/info'});
+  };
+
+  function emailSupportClick() {
+    var emailTo = "support@disconnect.me",
+        title = "Disconnect Search support",
+        action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
+    chrome.tabs.getSelected(function(tab){
+      chrome.tabs.update(tab.id, { url: action_url });
+    })
+  };
+
+  function spanItemClick() {
+    $(this).parent().find("input").trigger("click");
+  };
+
+  function closePopup() {
+    window.close();
+  };
+
+  function bubblePopUp() {
     $('#exp-msg').show().css("opacity",0).stop(true,true).animate({
       opacity: 1,
       top: 35
     });
-  }
-
+  };
   function closeBubblePopUp() {
     $('#exp-msg').stop(true,true).animate({
       opacity: 0,
@@ -177,7 +121,7 @@ window.onload = function() {
     }, function(){
       $(this).hide();
     });
-  }
+  };
 
   function showHelpImage() {
     var image = $(this).attr('id') == 'mode1_info' ? '#ominibox' : '#everywhere';
@@ -185,7 +129,7 @@ window.onload = function() {
       opacity: 1,
       marginTop: 12
     });
-  }
+  };
   function hideHelpImage() {
     var image = $(this).attr('id') == 'mode1_info' ? '#ominibox' : '#everywhere';
     $(image).stop(true,true).animate({
@@ -194,60 +138,6 @@ window.onload = function() {
     }, function(){
       $(this).hide();
     });
-  }
-
-  function emailSupportClick() {
-    var emailTo = "support@disconnect.me",
-          title = "Disconnect Search support",
-          action_url = "mailto:" + emailTo + "?Subject=" + encodeURIComponent(title);
-    chrome.tabs.getSelected(function(tab){
-      chrome.tabs.update(tab.id, { url: action_url });
-    })
-  }
-
-  function iconeCloseClick() {
-    $('.icone_close').removeClass('icone_close_absolute');
-    $('#ominibox').fadeOut('fast');
-    $('#everywhere').fadeOut('fast');
-
-    clientResize(211); //clientResize('272px');
-    $('#settings').fadeIn('slow');
   };
 
-  function toolBarInfoClick() {
-    chrome.tabs.create({url: 'http://disconnect.me/search/info'});
-  };
-
-  function clientResize(height) {
-    $('html,body').stop(true,true).animate({
-      "height":height
-    })
-  };
-
-  function checkItem(){
-    if ($(this).hasClass("mode_settings")) {
-      $(this).trigger("click");
-    } else {
-      $(this).find("input").trigger("click");
-    }
-  }
-
-  function updateSearchEngineIcon(x) {
-    var icon;
-    if (x == 0) icon = "google";
-    else if (x == 1) icon = "bing";
-    else if (x == 2) icon = "yahoo";
-    else if (x == 3) icon = "blekko";
-    else if (x == 4) icon = "duckduckgo";
-    document.getElementById("search_engine").className = icon;
-  }
-
-};
-
-String.prototype.format = String.prototype.f = function() {
-  var s = this, i = arguments.length;
-  while (i--) {
-    s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-  }
-  return s;
 };

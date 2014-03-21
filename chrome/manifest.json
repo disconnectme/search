@@ -7,27 +7,34 @@
   "homepage_url": "https://www.disconnect.me/search",
   "permissions": [
     "chrome://favicon/",
+    "http://*/*",
+    "https://*/*",
     "contextMenus",
-    "cookies",
-    "history",
     "idle",
     "notifications",
     "tabs",
-    "unlimitedStorage",
     "webNavigation",
     "webRequest",
-    "webRequestBlocking",
-    "proxy",
-    "management",
-    "http://*/*",
-    "https://*/*"
+    "webRequestBlocking"
   ],
-  "content_security_policy":
-      "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["scripts/focus.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["scripts/form.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "background": {
     "scripts": [
       "scripts/vendor/jquery/jquery.js",
-      "scripts/search-plus-one.js",
       "scripts/background.js"
     ]
   },
@@ -35,12 +42,5 @@
     "default_title": "Disconnect Search",
     "default_icon": "images/48.png",
     "default_popup": "markup/popup.html"
-  },
-  "content_scripts": [{
-    "matches": ["http://*/*", "https://*/*"],
-    "js": ["scripts/focus.js", "scripts/vendor/jquery/jquery.js"],
-    "run_at": "document_start",
-    "all_frames": true
-  }],
-  "web_accessible_resources": ["images/search-close.png", "images/search-never-show.png", "images/search-notice.png"]
+  }
 }

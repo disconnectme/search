@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="../stylesheets/hint.min.css">
+    <link rel="stylesheet" href="../stylesheets/popup.css">
+  </head>
+  <body>
+    <div id="search_page">
+      <form id="frm_search" name="frm" onsubmit="return false;">
+        <div id="toolbar">
+          <div id="left">
+            <span id="dlogo"></span>
+            <input id="txt_search" type="text" value="" name="q" autocomplete="off" size="55" maxlength="255" placeholder="">
+            <input id="btn_search" type="submit" value="Search" hidefocus="true" tabindex="-1">
+          </div>
+          <div id="right">
+            <span id="toolbar_feedback" class="icone email link hint--left hint--bounce" data-hint="Help & feedback"></span>
+            <span id="toolbar_info" class="icone info_b link hint--left hint--bounce" data-hint="More info"></span>
+          </div>
+        </div>
+          
+        <div id="pages">
+          <div id="settings" actived="false">
+            <div id="mode_select">
+              <div class="header">
+                <span>Options</span>
+              </div>
+              
+              <div class="checkbox">
+                <ul>
+                  <li>
+                    <input id="omnibox-box" class="mode_settings" type="checkbox" value="1" name="omnibox-box">
+                    <span>Search from the omnibox</span>
+                    <span id="mode1_info" class="whats_this link">?</span>
+                  </li>
+                  <li>
+                    <input id="everywhere-box" class="mode_settings" type="checkbox" value="2" name="everywhere-box">
+                    <span>Search from everywhere</span>
+                    <span id="mode2_info" class="whats_this link">?</span>
+                    <span class="beta">Beta</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="exp-msg" class="hide">
+          This experimental feature will disable some advanced options that search engines offer like image search and map search.
+        </div>
+
+        <div id="ominibox" actived="false" class="hide">
+          <img src="../images/search-omnibox-card_no-shadow.png" class="center_image"></img>
+        </div>
+          
+        <div id="everywhere" actived="false" class="hide">
+          <img src="../images/search-everywhere-card_no-shadow.png" class="center_image"></img>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
