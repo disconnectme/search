@@ -11,7 +11,7 @@ var BG = require("background.js");
 
 var searchPanel = panel.Panel({
   width: 280,
-  height: 130,
+  height: 247,
   contentURL: self.data.url("markup/popup.html"),
   contentScriptFile: [
     self.data.url("scripts/vendor/jquery/jquery.js"),
@@ -57,5 +57,5 @@ exports.main = function(options, callbacks) {
     });
   }
 
-  BG.search_initialize(this);
+  BG.search_initialize(options);
 };

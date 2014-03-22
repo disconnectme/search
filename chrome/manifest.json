@@ -1,6 +1,6 @@
 {
   "name": "Disconnect Search",
-  "version": "2.0.0",
+  "version": "1.6.0",
   "manifest_version": 2,
   "description": "Search privately using your favorite search engine.",
   "icons": {"128": "images/128.png", "48": "images/48.png", "16": "images/16.png"},
@@ -10,16 +10,12 @@
     "http://*/*",
     "https://*/*",
     "contextMenus",
-    "cookies",
-    "history",
     "idle",
     "notifications",
     "tabs",
-    "unlimitedStorage",
     "webNavigation",
     "webRequest",
-    "webRequestBlocking",
-    "management"
+    "webRequestBlocking"
   ],
   "content_scripts": [
     {
@@ -30,7 +26,7 @@
     },
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["scripts/form.js"],
+      "js": ["scripts/serp.js"],
       "run_at": "document_end",
       "all_frames": true
     }

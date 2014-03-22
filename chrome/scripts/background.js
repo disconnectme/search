@@ -1,18 +1,22 @@
-const C_PROXY_SEARCH = "ec2-54-204-181-250.compute-1.amazonaws.com";
+const C_PROXY_SEARCH = "searchbeta.disconnect.me";
 const HOUR_MS = 60 * 60 * 1000;
+
 var page_focus = false;
-var get_user_id = function() { return '0' };
+var get_user_id = function() { return localStorage['search_user_id'] };
 
 function search_init_variables() {
   const newInstallt = deserialize(localStorage['new_install']);
-  if (typeof newInstallt === 'undefined') {
+
+  var firstInstall = (typeof newInstallt === 'undefined');
+  if (firstInstall) {
     localStorage['new_install'] = "false";
 
-    localStorage['chk_mode_settings'] = '{"ominibox":true,"everywhere":false}';
+    localStorage['chk_mode_settings'] = JSON.stringify({'omnibox':true, 'everywhere':false});
     localStorage['search_omnibox'] = "true";
     localStorage['search_everywhere'] = "false";
 
-    localStorage['mode_settings'] = "1";
+    localStorage['search_engines'] = "0"; // google
+    localStorage['mode_settings'] = "1";  // popup/omnibox only
     localStorage['search_cohort'] = "7";
 
     localStorage['search_omnibox_on'] = localStorage['search_omnibox_off'] = "0";
@@ -20,12 +24,21 @@ function search_init_variables() {
     localStorage['search_total'] = "0";
 
     localStorage['build_version'] = chrome.app.getDetails().version.toString();
-    localStorage['search_group'] = 'disconnect';
-    localStorage['search_product'] = 'websearch';
+    localStorage['search_group'] = "disconnect";
+    localStorage['search_product'] = "websearch";
+    localStorage['search_user_id'] = "0";
+
+    chrome.tabs.query({url:'*://search.getadblock.com/*', status:"complete"}, function (tabs) {
+      for (var i=0; i<tabs.length; i++) {
+        chrome.tabs.executeScript(tabs[i].id, {file:'scripts/adblock.js', runAt:"document_end"});
+      }
+    });
 
     chrome.tabs.create({url: 'https://disconnect.me/search/welcome'});
-    $.get('http://goldenticket.disconnect.me/search');
+    window.setTimeout(reportUsage, 60000);
   }
+
+  return firstInstall;
 };
 
 function getHostname(href) {
@@ -82,9 +95,9 @@ function reportUsage() {
   data.path = data.path + [
     'group_id=' + localStorage.search_group,
     'product_id=' + localStorage.search_product,
-    'user_id=' + (get_user_id() || '0'),
+    'user_id=' + get_user_id(),
     'build=' + localStorage.build_version,
-    'cohort=' + (localStorage.search_cohort || 'none')
+    'cohort=' + localStorage.search_cohort
   ].join('&');
 
   var report_values_to_send = {
@@ -135,27 +148,37 @@ function onBeforeRequest(details) {
   const TYPE = details.type;
   const T_MAIN_FRAME = (TYPE == 'main_frame');
   const T_OTHER = (TYPE == 'other');
+  const T_SCRIPT = (TYPE == 'script');
   const T_XMLHTTPREQUEST = (TYPE == 'xmlhttprequest');
   
   const REGEX_URL = /[?|&]q=(.+?)(&|$)/;
+  const REGEX_URL_YAHOO = /[?|&]p=(.+?)(&|$)/;
   const REQUESTED_URL = details.url;
   const CHILD_DOMAIN = getHostname(REQUESTED_URL);
+  const C_EXTENSION_PARAMETER = "&source=extension&extension=chrome"
 
   var modeSettings = deserialize(localStorage['mode_settings']);
   var blockingResponse = {cancel: false};
   var blocking = false;
 
-  var isGoogle = (CHILD_DOMAIN.search("google.")>-1);
-  var hasSearch = (REQUESTED_URL.search("/search")>-1);
-  var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch")>-1);
+  var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
+  var isBing = (CHILD_DOMAIN.search("bing.") > -1);
+  var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
+  var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
+  var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
+  var hasSearch = (REQUESTED_URL.search("/search") > -1);
+  var hasMaps = (REQUESTED_URL.search("/maps") > -1);
+  var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
+  var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
 
   var isOmniboxSearch = (page_focus == false);
-  var isSearchByPage  = new RegExp("search_plus_one=form").test(REQUESTED_URL);
+  var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
   var isSearchByPopUp = new RegExp("search_plus_one=popup").test(REQUESTED_URL);
   var isProxied = ( 
     (modeSettings == 0 && isSearchByPopUp) ||
     (modeSettings == 1 && (isSearchByPopUp || isOmniboxSearch) ) ||
-    (modeSettings == 2 && (isSearchByPopUp || isOmniboxSearch || !isOmniboxSearch || isSearchByPage ) )
+    (modeSettings == 2 && (isSearchByPopUp || isSearchByPage ) ) ||
+    (modeSettings == 3 && (isSearchByPopUp || isOmniboxSearch || !isOmniboxSearch || isSearchByPage ) )
   );
 
   // blocking autocomplete by OminiBox or by Site URL
@@ -165,24 +188,55 @@ function onBeforeRequest(details) {
   var isGoogleSiteSearch = (!T_MAIN_FRAME && isGoogle && !hasGoogleImgApi && !hasGoogleReviewDialog &&
     ((REQUESTED_URL.search("suggest=") > -1) || (REQUESTED_URL.indexOf("output=search") > -1) || (REQUESTED_URL.indexOf("/s?") > -1) ||
     (REQUESTED_URL.search("/complete/search") > -1) || (REQUESTED_URL.search("/search") > -1)));
-
-  if (isProxied && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch)) {
+  var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
+  var isBingSiteSearch = ( isBing && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
+  var isBlekkoSearch = ( isBlekko && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
+  var isYahooSearch = ( isYahoo && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
+  
+  if ( (isProxied && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch)) || 
+    (modeSettings==2||modeSettings==3) && (isBingOMBSearch || isBingSiteSearch || isYahooSearch) ) {
     blocking = true;
     blockingResponse = { cancel: true };
   }
 
   // Redirect URL -> Proxied
   var match = REGEX_URL.exec(REQUESTED_URL);
+  if (isYahoo) match = REGEX_URL_YAHOO.exec(REQUESTED_URL);
+
   var foundQuery = ((match != null) && (match.length > 1));
-  var URLToProxy = (isGoogle && hasSearch);
+  var URLToProxy = ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo);
+
   if (isProxied && T_MAIN_FRAME && URLToProxy && foundQuery && !blocking) { 
     //console.log("%c Search by OminiBox/Everywhere", 'background: #33ffff;');
     localStorage.search_total = parseInt(localStorage.search_total) + 1;
 
-    var url_redirect = 'https://' + C_PROXY_SEARCH + '/searchTerms/search?query=' + match[1];
+    var searchEngineIndex = deserialize(localStorage['search_engines']);
+    var searchEngineName = null;
+    if      ( (searchEngineIndex == 0 && !isSearchByPage) || (isGoogle && isSearchByPage) )     searchEngineName = 'Google';
+    else if ( (searchEngineIndex == 1 && !isSearchByPage) || (isBing && isSearchByPage) )       searchEngineName = 'Bing';
+    else if ( (searchEngineIndex == 2 && !isSearchByPage) || (isYahoo && isSearchByPage) )      searchEngineName = 'Yahoo';
+    else if ( (searchEngineIndex == 3 && !isSearchByPage) || (isBlekko && isSearchByPage) )     searchEngineName = 'Blekko';
+    else if ( (searchEngineIndex == 4 && !isSearchByPage) || (isDuckDuckGo && isSearchByPage) ) searchEngineName = 'DuckDuckGo';
+    else searchEngineName = 'Google';
+
+    var url_redirect = 'https://' + C_PROXY_SEARCH + '/searchTerms/search?query=' + match[1] + C_EXTENSION_PARAMETER + '&ses=' + searchEngineName;
     blockingResponse = {
       redirectUrl: url_redirect
     };
+  } else if (!blocking){
+    
+    //search from websearch page, add parameters(if they aren't there yet) to indicate that extension is already installed.
+    var isWebSearch = (REQUESTED_URL.search(C_PROXY_SEARCH + "/searchTerms/search?") > -1);
+    var hasNotParametersExtension = (REQUESTED_URL.search(C_EXTENSION_PARAMETER) == -1);
+    if (isWebSearch && hasNotParametersExtension) {
+      blockingResponse = {
+        redirectUrl: REQUESTED_URL + C_EXTENSION_PARAMETER
+      };
+    }else if ((modeSettings==2 || modeSettings==3) && T_SCRIPT && isBlekko && hasWsOrApi) {
+      // HACK blekko redirect - only FORM use
+      var jsCode = "window.location = '" + REQUESTED_URL + '&search_plus_one=form'+ "';";
+      chrome.tabs.executeScript(details.tabId, {code: jsCode, runAt: "document_start"}, function(){});
+    }
   } else if(blocking) {
     //console.log("%c BLOCKED",'background: #333333; color:#ff0000');
   }
@@ -195,7 +249,7 @@ function onWebRequestBeforeSendHeaders(details) {
     var XDST = {name: 'X-Disconnect-Stats', value: JSON.stringify({
       group_id: localStorage.search_group,
       product_id: localStorage.search_product,
-      user_id: (get_user_id() || '0')
+      user_id: get_user_id()
     })};
     details.requestHeaders.push(XDST);
   }
@@ -217,6 +271,9 @@ function onRuntimeMessage(request, sender, sendResponse) {
       page_focus = request.page_focus;
       //console.log("Focus:", this.page_focus);
     }
+  } else if (request.action == 'adblock') {
+    localStorage['search_group'] = request.adblock_group_id;
+    localStorage['search_user_id'] = request.adblock_user_id;
   }
 };
 
@@ -230,10 +287,10 @@ function search_load_events() {
 };
 
 function search_initialize() {
-  search_init_variables();
+  var firstInstall = search_init_variables();
   search_load_events();
 
-  reportUsage();
+  if (!firstInstall) reportUsage();
   setInterval(reportUsage, HOUR_MS);
 };
 

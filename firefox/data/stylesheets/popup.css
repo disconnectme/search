@@ -16,12 +16,12 @@
 
 html {
   width: 280px;
-  height: 213px;
+  height: 247px;
 }
 
 body {
   margin: 0;
-  height: 211px;
+  height: 245px;
   padding:0;
   font-family: 'Antenna RE', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color:#fff;
@@ -46,9 +46,8 @@ div {
 .hide { display: none;}
 .float_left { float: left; }
 
-
 #search_page {
-  height: 211px;
+  height: 245px;
 }
 
 .icone {
@@ -64,13 +63,13 @@ div {
   background-position: 0 0;
   background-color: #009548;
 }
-.icone.gear_b{
+.icone.gear_b {
   float: left;
   background-position: 0 0px;
   background-color: #009548;
 }
 
-.icone.gear_g{
+.icone.gear_g {
   float: left;
   background-position: 0 0px;
   background-color: #009548;
@@ -95,13 +94,13 @@ div {
   margin-left: -5px;
 }
 
-.icone.info_b{
+.icone.info_b {
   float: left;
   background-position: -34px 0px;
   background-color: #1c7045;
 }
 
-.icone.info_g{
+.icone.info_g {
   float: left;
   background-position: 0 -42;
 }
@@ -121,7 +120,7 @@ div {
   width: 212px;
 }
 
-#toolbar #right{
+#toolbar #right {
   float: left;
   right: 0px !important;
   position: absolute;
@@ -140,17 +139,20 @@ div {
   font-size: 10px;
   font-family: 'Antenna RE', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
-::-webkit-input-placeholder { /* WebKit browsers */
-  color: #aba9a9;
-}
-:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-  color: #aba9a9;
-}
-::-moz-placeholder { /* Mozilla Firefox 19+ */
-  color: #aba9a9;
-}
-:-ms-input-placeholder { /* Internet Explorer 10+ */
-  color: #aba9a9;
+::-webkit-input-placeholder { color: #aba9a9; }
+:-moz-placeholder { color: #aba9a9; }
+::-moz-placeholder { color: #aba9a9; }
+:-ms-input-placeholder { color: #aba9a9; }
+
+#toolbar #left #search_engine {
+  display: block;
+  width: 17px;
+  height: 17px;
+  background: url(../images/search-engine-icons.png);
+  top: 8px;
+  right: 78px;
+  position: absolute;
+  cursor: pointer;
 }
 
 .hint {
@@ -165,6 +167,31 @@ div {
 }
 .hint--left:before { border-left-color: #2b2b2b; }
 .hint--right:before { border-right-color: #2b2b2b; }
+
+#toolbar #left #search_engine.google, .google {
+  background-position: 0 0px !important;
+  cursor: pointer;
+}
+
+#toolbar #left #search_engine.bing, .bing {
+  background-position: 0 -17px !important;
+  cursor: pointer;
+}
+
+#toolbar #left #search_engine.yahoo, .yahoo {
+  background-position:  0 -34px !important;
+  cursor: pointer;
+}
+
+#toolbar #left #search_engine.blekko, .blekko {
+  background-position: 0  -51px !important;
+  cursor: pointer;
+}
+
+#toolbar #left #search_engine.duckduckgo, .duckduckgo {
+  background-position: 0 -68px !important;
+  cursor: pointer;
+}
 
 #toolbar #left #btn_search {
   height: 0px;
@@ -264,13 +291,81 @@ div {
 }
 
 .checkbox input[type="checkbox"]:checked:before {
-  background: url(../images/check.png);
+  background: url(../images/checksss.png);
   background-size: contain;
 }
 
 .checkbox span {
   line-height: 10px;
+}
+
+.checkbox label {
   cursor: pointer;
+}
+
+#search_select {
+  height: 83px;
+}
+
+#search_select .checkbox {
+  background: #fff;
+}
+#search_select .checkbox ul {
+  margin: 0 auto;
+  padding: 0;
+}
+
+#search_select .checkbox li {
+  float: left;
+  width: 25px;
+  /*margin-right: 13px;*/
+  border-right: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 15px;
+}
+
+#search_select .checkbox li:last-child {
+  border-right: 0;
+  margin-right: 0px;
+}
+
+#search_select .checkbox li.active {
+  background: #f6f6f6;
+}
+#search_select .checkbox li.active span {
+  background-color: #20953b;
+}
+
+#search_select .checkbox li input{
+  display: none;
+}
+
+#search_select .checkbox li span{
+  background: #888 url(../images/search-engine-icons2.png) no-repeat;
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto;
+}
+
+#search_select .google{
+  background-position: 0 0px !important;
+}
+
+#search_select .bing{
+  background-position: 0 -24px !important;
+}
+
+#search_select .yahoo{
+  background-position: 0 -48px !important;
+}
+
+#search_select .blekko{
+  background-position: 0 -72px !important;
+}
+
+#search_select .duckduckgo{
+  background-position: 0 -96px !important;
 }
 
 #mode_select {
@@ -289,27 +384,10 @@ div {
   position: relative;
 }
 
-#exp-msg {
-  background: #fefedc;
-  border-top: 1px solid #e5d5d5;
-  padding: 17px 10px;
-  width: 260px;
-  height: 50px;
-  position: absolute;
-  line-height: 16px;
-  z-index: 1;
-  font-size: 10px;
-  text-align: left;
-  color: #999;
-  left: 0px;
-  top: 28px;
-  font-family: 'Antenna RE', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-
 .whats_this {
   font-size: 10.5px;
   top: 10px;
-  left: 172px;
+  left: 182px;
   width: 17px;
   height: 15px;
   text-align: center;
@@ -336,36 +414,63 @@ div {
   padding-top: 10px;
 }
 
-.beta {
-  font-size: 8px;
-  background: #fefedc;
-  border: 1px solid #e5e6ac;
-  border-radius: 3px;
-  padding: 3px 5px;
-  position: absolute;
-  left: 205px;
-  display: block;
-  top: 8px;
-  /*color: #838383;*/
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.beta:hover {
-  /*background: #ffc600;*/
-}
-
-#ominibox, #everywhere {
+#omnibox, #everywhere {
   position: absolute;
   z-index: 1;
   width: 280px;
-  /*background: #fff;*/
   top: 34px;
   height: 112px;
 }
-#ominibox img,
+#omnibox img,
 #everywhere img {
   width: 100%;
   padding: 0;
   margin-top: -10px;
   box-shadow: 0 5px 6px rgba(0,0,0,.2);
 }
+
+/* CSS3 Animations */
+@-moz-keyframes flipInYGreen {
+  0% { -moz-transform: perspective(400px) rotateY(90deg); }
+  40% { -moz-transform: perspective(400px) rotateY(-20deg); }
+  100% { -moz-transform: perspective(400px) rotateY(0deg); }
+}
+@keyframes flipInYGreen {
+  0% { transform: perspective(400px) rotateY(90deg); }
+
+  40% { transform: perspective(400px) rotateY(-20deg); }
+
+  100% { transform: perspective(400px) rotateY(0deg); }
+}
+
+.flipInYGreen {
+  -moz-backface-visibility: visible !important;
+  -moz-animation-name: flipInYGreen;
+  backface-visibility: visible !important;
+  animation-name: flipInYGreen;
+}
+.animated {
+  -moz-animation-duration: 1s;
+  animation-duration: 1s;
+  -moz-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+#support span {
+  display: block;
+  background: #21953a url(../images/heart.png) no-repeat 53px 12px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  text-align: center;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  color: white;
+  -webkit-transition: background-color .4s ease;
+     -moz-transition: background-color .4s ease;
+      -ms-transition: background-color .4s ease;
+       -o-transition: background-color .4s ease;
+          transition: background-color .4s ease;
+}
+
+#support span:hover { background-color: #24a33f; }

@@ -6,8 +6,14 @@ function getHostname(href) {
 
 function modifyForm() {
   var domain = getHostname(window.document.URL);
+
   var isGoogle = (domain.indexOf(".google.")>=0);
-  if (isGoogle) {
+  var isBing = (domain.indexOf("bing.com")>=0);
+  var isYahoo = (domain.indexOf("yahoo.com")>=0);
+  var isBlekko = (domain.indexOf("blekko.com")>=0);
+  var isDDG = (domain.indexOf("duckduckgo.com")>=0);
+
+  if (isGoogle || isBing || isYahoo || isBlekko || isDDG) {
     var forms = window.document.getElementsByTagName('form');
     forms = [].slice.call(forms, 0);
 
@@ -19,7 +25,7 @@ function modifyForm() {
         element.setAttribute('value', 'form');
         f.appendChild(element);
 
-        f.onsubmit = function() { f.submit(); };
+        if (isGoogle) f.onsubmit = function() { f.submit(); };
         //alert('JavaScript injected in Search FORM!');
       }
     });
