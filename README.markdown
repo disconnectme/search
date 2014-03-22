@@ -14,7 +14,7 @@ that lets you search privately using your favorite search engine.
 
    With:
 
-        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>1.5</em:minVersion><em:maxVersion>24.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication><em:targetApplication><Description><em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id><em:minVersion>0.7</em:minVersion><em:maxVersion>2.6.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication>
+        <em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>1.5</em:minVersion><em:maxVersion>30.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication><em:targetApplication><Description><em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id><em:minVersion>0.7</em:minVersion><em:maxVersion>2.6.*</em:maxVersion><em:updateLink>https://www.disconnect.me/extensions/search.xpi</em:updateLink></Description></em:targetApplication>
 
 3. In `builds/tmp/install.rdf`, replace:
 
@@ -34,7 +34,7 @@ that lets you search privately using your favorite search engine.
           <Description>
             <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
             <em:minVersion>1.5</em:minVersion>
-            <em:maxVersion>24.*</em:maxVersion>
+            <em:maxVersion>30.*</em:maxVersion>
           </Description>
         </em:targetApplication>
         <!-- Flock -->
