@@ -16,12 +16,10 @@
 
 html {
   width: 280px;
-  height: 245px;
 }
 
 body {
   margin: 0;
-  height: 245px;
   padding:0;
   font-family: 'Antenna RE', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color:#fff;
@@ -36,10 +34,6 @@ div {
 .clear { clear: both; }
 .hide { display: none;}
 .float_left { float: left; }
-
-#search_page {
-  height: 245px;
-}
 
 .icone {
   display: block;
@@ -106,7 +100,21 @@ div {
   overflow: visible;
 }
 
+#toolbar #top {
+  display: none;
+  font-size: 10px;
+  color: #FFF;
+  background: #555 url(../images/adblock_logo_small.png) no-repeat 10px 6px;
+    -webkit-background-size: 16px;
+    -o-background-size: 16px;
+  background-size: 16px;
+  padding: 6px 0 0 34px;
+  height: 23px;
+  margin-bottom: 1px;
+}
+
 #toolbar #left {
+  position: relative;
   float:left;
   width: 212px;
 }
@@ -187,7 +195,6 @@ div {
 #pages {
   position:relative;
   top: 35px;
-  height:175px;
 }
 
 #dlogo {
@@ -348,10 +355,6 @@ div {
   background-position-y: -96px !important;
 }
 
-#mode_select {
-  height: 93px;
-}
-
 .mode_settings {
   float: left;
 }
@@ -473,3 +476,8 @@ div {
 }
 
 #support span:hover { background-color: #24a33f; }
+
+#incognito_option {
+  background-color: #607c97;
+  color: #FFF;
+}

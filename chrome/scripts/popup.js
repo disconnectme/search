@@ -4,15 +4,18 @@ window.onload = function() {
   const DESERIALIZE = BG.deserialize;
   const TXT_SEARCH = $('#txt_search');
   const SEARCH_ENGINE_LABEL = 'search_engines';
+  const INCOGNITO_LABEL = 'search_incognito';
   const CHK_MODE_SETTINGS_LABEL = 'chk_mode_settings';
   const TXT_DEFAULT_MESSAGE = 'Search privately';
 
   initialize();
 
   function initialize() {
+    adblock();
     define_events();
     analytics();
     defaults_values();
+    checkPremium();
   };
 
   function define_events() {
@@ -24,6 +27,7 @@ window.onload = function() {
     $('#search_select .checkbox li').click(checkItemClick);
     $('.search_engines').click(chkSearchEngineClick);
     $('.mode_settings').click(chkModeSettingsClick);
+
     $('.whats_this').bind({
       mouseenter: showHelpImage,
       mouseleave: hideHelpImage
@@ -63,7 +67,8 @@ window.onload = function() {
       TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE);
     }
 
-    updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
+    var incognito = DESERIALIZE(localStorage[INCOGNITO_LABEL]);
+    $("#incognito").attr('checked', incognito)
 
     var chkbox = '{"omnibox":false,"everywhere":false}';
     try { chkbox = JSON.parse(localStorage[CHK_MODE_SETTINGS_LABEL]); }catch(e){};
@@ -72,6 +77,26 @@ window.onload = function() {
 
     TXT_SEARCH.focus();
   };
+
+  function adblock() {
+    var isAdblock = DESERIALIZE(localStorage['search_is_adblock']);
+    if (isAdblock) {
+      $('#support span').text('Support Us');
+      $('#support span').css('background-position', '93px 12px');
+      $('#support span').css('padding-left', '15px');
+      $('#txt_search').css('width', '181px');
+      $('#pages').css('top', '63px');
+      $('#toolbar #right').css('margin-top', '-1px');
+      $('#toolbar #dlogo').hide();
+      $('#toolbar #top').show();
+    }
+  };
+
+  function checkPremium() {
+    if (localStorage.premium) {
+      $('#support').hide();
+    }
+  }
 
   function chkModeSettingsClick() {
     var omnibox = $('#omnibox-box');
@@ -82,6 +107,9 @@ window.onload = function() {
       'everywhere': everywhere.is(':checked')
     };
     localStorage[CHK_MODE_SETTINGS_LABEL] = JSON.stringify(chk_box);
+
+    var incognito_box = $("#incognito").is(":checked");
+    localStorage[INCOGNITO_LABEL] = JSON.stringify(incognito_box);
 
     var mode = 0;
     if      (chk_box.everywhere==false && chk_box.omnibox==true) mode = 1;
@@ -95,7 +123,7 @@ window.onload = function() {
       checkbox_class = "." + checkbox.attr("class");
 
     $(checkbox_class).attr("checked", false).parent().removeClass("active").find("span").removeClass("flipInYGreen animated");
-    
+
     localStorage[SEARCH_ENGINE_LABEL] = DESERIALIZE(checkbox.attr('value'));
     updateSearchEngineIcon(localStorage[SEARCH_ENGINE_LABEL]);
 
@@ -159,12 +187,14 @@ window.onload = function() {
   };
 
   function showHelpImage() {
+    var start_position = { opacity: 1, marginTop: 12 };
+    var isAdblock = DESERIALIZE(localStorage['search_is_adblock']);
+    if (isAdblock) start_position.marginTop = 40;
+
     var image = $(this).attr('id') == 'mode1_info' ? '#omnibox' : '#everywhere';
-    $(image).show().css("opacity",0).stop(true,true).animate({
-      opacity: 1,
-      marginTop: 12
-    });
+    $(image).show().css("opacity",0).stop(true,true).animate(start_position);
   };
+
   function hideHelpImage() {
     var image = $(this).attr('id') == 'mode1_info' ? '#omnibox' : '#everywhere';
     $(image).stop(true,true).animate({

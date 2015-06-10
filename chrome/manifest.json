@@ -1,50 +1,51 @@
 {
-  "name": "Disconnect Search",
-  "version": "2.0.0",
-  "manifest_version": 2,
-  "description": "Search privately using your favorite search engine.",
-  "icons": {"128": "images/128.png", "48": "images/48.png", "16": "images/16.png"},
-  "homepage_url": "https://www.disconnect.me/search",
-  "permissions": [
-    "chrome://favicon/",
-    "http://*/*",
-    "https://*/*",
-    "contextMenus",
-    "cookies",
-    "history",
-    "idle",
-    "notifications",
-    "tabs",
-    "unlimitedStorage",
-    "webNavigation",
-    "webRequest",
-    "webRequestBlocking",
-    "management"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["scripts/focus.js"],
-      "run_at": "document_start",
-      "all_frames": true
-    },
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["scripts/serp.js"],
-      "run_at": "document_end",
-      "all_frames": true
-    }
-  ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  "background": {
-    "scripts": [
-      "scripts/vendor/jquery/jquery.js",
-      "scripts/background.js"
-    ]
-  },
-  "browser_action": {
-    "default_title": "Disconnect Search",
-    "default_icon": "images/48.png",
-    "default_popup": "markup/popup.html"
-  }
+   "background": {
+      "scripts": [ "scripts/vendor/jquery/jquery.js", "scripts/background.js" ]
+   },
+   "browser_action": {
+      "default_icon": "images/48.png",
+      "default_popup": "markup/popup.html",
+      "default_title": "Disconnect Search"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "scripts/focus.js" ],
+      "matches": [ "http://*/*", "https://*/*" ],
+      "run_at": "document_start"
+   }, {
+      "all_frames": true,
+      "js": [ "scripts/serp.js" ],
+      "matches": [ "http://*/*", "https://*/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "js": [ "scripts/bandaid.js" ],
+      "matches": [ "https://*.disconnect.me/*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "css": [ "stylesheets/ddgwarn.css" ],
+      "js": [ "scripts/vendor/jquery/jquery.js", "scripts/ddgwarn.js" ],
+      "matches": [ "https://duckduckgo.com/html*" ],
+      "run_at": "document_end"
+   }, {
+      "all_frames": true,
+      "js": [ "scripts/incognito.js" ],
+      "matches": [ "https://search.disconnect.me/*", "https://searchbeta.disconnect.me/*" ],
+      "run_at": "document_end"
+   } ],
+   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+   "description": "Search privately using your favorite search engine.",
+   "homepage_url": "https://disconnect.me/search",
+   "icons": {
+      "128": "images/128.png",
+      "16": "images/16.png",
+      "48": "images/48.png"
+   },
+   "key": "",
+   "manifest_version": 2,
+   "name": "Disconnect Search",
+   "permissions": [ "chrome://favicon/", "http://*/*", "https://*/*", "contextMenus", "cookies", "history", "idle", "notifications", "tabs", "unlimitedStorage", "webNavigation", "webRequest", "webRequestBlocking", "management" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "2.0.7"
 }
