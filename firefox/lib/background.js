@@ -1,5 +1,5 @@
 "use strict";
-const C_PROXY_SEARCH = "searchbeta.disconnect.me";
+const C_PROXY_SEARCH = "search.disconnect.me";
 const HOUR_MS = 60 * 60 * 1000;
 
 var self = require("sdk/self");
@@ -34,7 +34,6 @@ var disconnectSearch = Class({
   contractID:         contractId,
   _xpcom_categories:  [{category: "content-policy"}],
   QueryInterface:     XPCOMUtils.generateQI([Ci.nsIContentPolicy]),
-
   shouldLoad: shouldLoadFunction,
   shouldProcess: function(aContentType, aContentLocation, aRequestOrigin, aContext, aMimeType, aExtra, aRequestPrincipal) {
     return Ci.nsIContentPolicy.ACCEPT;
@@ -70,12 +69,12 @@ function search_init_variables(options) {
   if (firstInstall) {
     localStorage['new_install'] = "false";
 
-    localStorage['chk_mode_settings'] = JSON.stringify({'omnibox':true, 'everywhere':false});
-    localStorage['search_omnibox'] = "true";
+    localStorage['chk_mode_settings'] = JSON.stringify({'omnibox':false, 'everywhere':false});
+    localStorage['search_omnibox'] = "false";
     localStorage['search_everywhere'] = "false";
 
     localStorage['search_engines'] = "0"; // google
-    localStorage['mode_settings'] = "1";  // popup/omnibox only
+    localStorage['mode_settings'] = "0";  // popup only
     localStorage['search_cohort'] = "4";
 
     localStorage['search_omnibox_on'] = localStorage['search_omnibox_off'] = "0";
@@ -87,7 +86,34 @@ function search_init_variables(options) {
     localStorage['search_product'] = 'websearch';
     localStorage['search_user_id'] = "0";
 
-    tabs.open('https://disconnect.me/search/welcome');
+    var historyService = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+    var query1 = historyService.getNewQuery();
+    query1.searchTerms = "search/partner/";
+    query1.domain = "disconnect.me";
+    query1.beginTimeReference = query1.TIME_RELATIVE_NOW;
+    query1.beginTime = -24 * 60 * 60 * 1000000 * 7; // 1 week ago in microseconds
+    query1.endTimeReference = query1.TIME_RELATIVE_NOW;
+    query1.endTime = 0; // now
+    var historyOptions = historyService.getNewQueryOptions();
+    var result = historyService.executeQueries([query1], 1, historyOptions);
+
+    var cont = result.root;
+    cont.containerOpen = true;
+    var partner = false;
+    for (var i = 0; i < cont.childCount; i ++) {
+      var node = cont.getChild(i);
+      var url = node.uri;
+      partner = url.substr(url.lastIndexOf('/') + 1);
+      //dump("\n" + partner + "\n");
+    }
+    cont.containerOpen = false;
+    if (partner) {
+      tabs.open('https://disconnect.me/search/partner/' + partner + '/welcome');
+      localStorage['partner'] = partner;
+    }
+    else {
+      tabs.open('https://disconnect.me/search/welcome');
+    }
   }
 
   return firstInstall;
@@ -226,7 +252,8 @@ function onHttpModifyRequest(channel) {
     const CHILD_DOMAIN = channel.URI.host;
     const REGEX_URL = /[?|&]q=(.+?)(&|$)/;
     const REGEX_URL_YAHOO = /[?|&]p=(.+?)(&|$)/;
-    const C_EXTENSION_PARAMETER = "&source=extension&extension=firefox"
+    
+    var C_EXTENSION_PARAMETER = "&source=extension&extension=firefox"
 
     //if (PARENT) console.log("Http-on-Modify-Request:", REQUESTED_URL, PARENT);
     onWebRequestBeforeSendHeaders(channel);
@@ -237,11 +264,13 @@ function onHttpModifyRequest(channel) {
     var isBing = (CHILD_DOMAIN.search("bing.") > -1);
     var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
     var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
-    var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
+    var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1) && (REQUESTED_URL.search("/html") == -1) ; // /html indicate that the server made a redirect
     var hasSearch = (REQUESTED_URL.search("/search") > -1);
     var hasMaps = (REQUESTED_URL.search("/maps") > -1);
     var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
     var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
+    
+    if (localStorage.search_engines == 4 || isDuckDuckGo || (REQUESTED_URL.search("ses=DuckDuckGo") != -1) )  C_EXTENSION_PARAMETER = ""; //if is duckduck no proxy is need on server
 
     var isOmniboxSearch = (page_focus == false);
     var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
@@ -337,7 +366,7 @@ function onWindowOpen() {
     CURRENT_SEARCH = C_FIREFOX_SEARCH;
     page_focus = false;
     var modeSettings = deserialize(localStorage['mode_settings']);
-    if (modeSettings == 1) { // private omnibox
+    if (modeSettings == 1 || modeSettings == 3) { // private omnibox
       var CHILD_DOMAIN = Services.search.defaultEngine.searchForm;
       var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
       var isBing = (CHILD_DOMAIN.search("bing.") > -1);

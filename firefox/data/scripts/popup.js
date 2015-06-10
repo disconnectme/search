@@ -4,6 +4,7 @@
 const TXT_SEARCH = $('#txt_search');
 const SEARCH_ENGINE_LABEL = 'search_engines';
 const CHK_MODE_SETTINGS_LABEL = 'chk_mode_settings';
+const INCOGNITO_LABEL = 'incognito';
 const TXT_DEFAULT_MESSAGE = 'Search privately';
 var localStorage = {};
 
@@ -36,6 +37,7 @@ function define_events() {
   $('#search_select .checkbox li').click(checkItemClick);
   $('.search_engines').click(chkSearchEngineClick);
   $('.mode_settings').click(chkModeSettingsClick);
+  $('#incognito').on("change", chkIncognitoClick);
   $('.whats_this').bind({
     mouseenter: showHelpImage,
     mouseleave: hideHelpImage
@@ -83,6 +85,13 @@ function defaults_values() {
     TXT_SEARCH.attr('placeholder', TXT_DEFAULT_MESSAGE);
   }
   updateSearchEngineIcon(se);
+  
+  var incognito = DESERIALIZE(localStorage[INCOGNITO_LABEL]);
+  if(incognito == undefined) {
+    setLocalStorage(INCOGNITO_LABEL,"false");
+  } else {
+    $("#incognito").attr('checked', incognito)
+  }
 
   var chkbox = '{"omnibox":false,"everywhere":false}';
   try { chkbox = JSON.parse(localStorage[CHK_MODE_SETTINGS_LABEL]); }catch(e){};
@@ -110,6 +119,12 @@ function chkModeSettingsClick() {
   setLocalStorage('mode_settings', mode.toString());
 
   TXT_SEARCH.focus();
+};
+
+function chkIncognitoClick(){
+  var incognito_box = $("#incognito").is(":checked");
+  setLocalStorage("incognito", JSON.stringify(incognito_box));
+    TXT_SEARCH.focus();
 };
 
 function chkSearchEngineClick() {

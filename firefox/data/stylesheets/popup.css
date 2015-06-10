@@ -429,6 +429,11 @@ div {
   box-shadow: 0 5px 6px rgba(0,0,0,.2);
 }
 
+#incognito_option  {
+  background-color: #607c97;
+  color: #FFF;
+}
+
 /* CSS3 Animations */
 @-moz-keyframes flipInYGreen {
   0% { -moz-transform: perspective(400px) rotateY(90deg); }
