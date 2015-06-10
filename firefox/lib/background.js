@@ -130,7 +130,7 @@ function search_load_events() {
 
   onWindowOpen(); // load events in current window
   pageMod.PageMod({
-    include: [/.*google.*/, /.*bing.*/, /.*yahoo.*/, /.*blekko.*/, /.*duckduckgo.*/],
+    include: [/.*google.*/, /.*bing.*/, /.*yahoo.*/, /.*duckduckgo.*/],
     contentScriptFile: self.data.url("scripts/serp.js"),
     contentScriptWhen: "ready"
   });
@@ -203,11 +203,9 @@ function shouldLoadFunction(aContentType, aContentLocation, aRequestOrigin, aCon
     var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
     var isBing = (CHILD_DOMAIN.search("bing.") > -1);
     var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
-    var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
     var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
     var hasSearch = (REQUESTED_URL.search("/search") > -1);
     var hasMaps = (REQUESTED_URL.search("/maps") > -1);
-    var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
     var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
 
     var isOmniboxSearch = (page_focus == false);
@@ -229,10 +227,10 @@ function shouldLoadFunction(aContentType, aContentLocation, aRequestOrigin, aCon
       (REQUESTED_URL.search("/complete/search") > -1) || (REQUESTED_URL.search("/search") > -1)));
     var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
     var isBingSiteSearch = ( isBing && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
-    var isBlekkoSearch = ( isBlekko && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
     var isYahooSearch = ( isYahoo && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
+    var isNotGoogleMapSearch = !(REQUESTED_URL.search("tbm=map") > -1);
     
-    if ( (isProxied && (isChromeInstant || isGoogleOMBSearch || isGoogleSiteSearch || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch)) || 
+    if ( (isProxied && (isChromeInstant || isGoogleOMBSearch || (isGoogleSiteSearch && isNotGoogleMapSearch) || isBingOMBSearch || isBingSiteSearch || isYahooSearch)) || 
       (modeSettings==2||modeSettings==3) && (isBingOMBSearch || isBingSiteSearch || isYahooSearch) ) {
       //console.log("BLOCKING REQUEST", REQUESTED_URL);
       return Ci.nsIContentPolicy.REJECT;
@@ -263,14 +261,12 @@ function onHttpModifyRequest(channel) {
     var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
     var isBing = (CHILD_DOMAIN.search("bing.") > -1);
     var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
-    var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
     var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1) && (REQUESTED_URL.search("/html") == -1) ; // /html indicate that the server made a redirect
     var hasSearch = (REQUESTED_URL.search("/search") > -1);
     var hasMaps = (REQUESTED_URL.search("/maps") > -1);
-    var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
     var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
     
-    if (localStorage.search_engines == 4 || isDuckDuckGo || (REQUESTED_URL.search("ses=DuckDuckGo") != -1) )  C_EXTENSION_PARAMETER = ""; //if is duckduck no proxy is need on server
+    if (localStorage.search_engines == 3 || isDuckDuckGo || (REQUESTED_URL.search("ses=DuckDuckGo") != -1) )  C_EXTENSION_PARAMETER = ""; //if is duckduck no proxy is need on server
 
     var isOmniboxSearch = (page_focus == false);
     var isSearchByPage = new RegExp("search_plus_one=form").test(REQUESTED_URL);
@@ -290,7 +286,7 @@ function onHttpModifyRequest(channel) {
     if (isYahoo) match = REGEX_URL_YAHOO.exec(REQUESTED_URL);
 
     var foundQuery = ((match != null) && (match.length > 1));
-    var URLToProxy = ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo);
+    var URLToProxy = ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || isDuckDuckGo);
     
     if (isProxied && PARENT && URLToProxy && foundQuery) { 
       //console.log("Search by OminiBox/Everywhere");
@@ -302,8 +298,7 @@ function onHttpModifyRequest(channel) {
       if      ( (searchEngineIndex == 0 && !isSearchByPage && !firefoxSearch) || (isGoogle && isSearchByPage) || (isGoogle && firefoxSearch) ) searchEngineName = 'Google';
       else if ( (searchEngineIndex == 1 && !isSearchByPage && !firefoxSearch) || (isBing && isSearchByPage) || (isBing && firefoxSearch) ) searchEngineName = 'Bing';
       else if ( (searchEngineIndex == 2 && !isSearchByPage && !firefoxSearch) || (isYahoo && isSearchByPage) || (isYahoo && firefoxSearch) ) searchEngineName = 'Yahoo';
-      else if ( (searchEngineIndex == 3 && !isSearchByPage && !firefoxSearch) || (isBlekko && isSearchByPage) || (isBlekko && firefoxSearch) ) searchEngineName = 'Blekko';
-      else if ( (searchEngineIndex == 4 && !isSearchByPage && !firefoxSearch) || (isDuckDuckGo && isSearchByPage) || (isDuckDuckGo && firefoxSearch) ) searchEngineName = 'DuckDuckGo';
+      else if ( (searchEngineIndex == 3 && !isSearchByPage && !firefoxSearch) || (isDuckDuckGo && isSearchByPage) || (isDuckDuckGo && firefoxSearch) ) searchEngineName = 'DuckDuckGo';
       else searchEngineName = 'google';
 
       var url_redirect = 'https://' + C_PROXY_SEARCH + '/searchTerms/search?query=' + match[1] + C_EXTENSION_PARAMETER + '&ses=' + searchEngineName;
@@ -314,7 +309,7 @@ function onHttpModifyRequest(channel) {
       var url_redirect = REQUESTED_URL + C_EXTENSION_PARAMETER;
       var uri = iOService.newURI(url_redirect, "UTF-8", null);
       redirectTo(channel, uri);
-    } else if (!PARENT && modeSettings>=2 && /jQuery?/.test(REQUESTED_URL) && isBlekko && hasWsOrApi) {
+    } else if (!PARENT && modeSettings>=2 && /jQuery?/.test(REQUESTED_URL)) {
       //console.log("FOUND BLEKKO HACK", REQUESTED_URL);
       var dcm = getDocumentFromChannel(channel);
       if (dcm) {
@@ -371,9 +366,8 @@ function onWindowOpen() {
       var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
       var isBing = (CHILD_DOMAIN.search("bing.") > -1);
       var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
-      var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
       var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1);
-      if (isGoogle || isBing || isYahoo || isBlekko || isDuckDuckGo) {
+      if (isGoogle || isBing || isYahoo || isDuckDuckGo) {
         //console.log("SUGGEST BLOCK");
         Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
       } else {

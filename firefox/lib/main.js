@@ -50,17 +50,19 @@ searchPanel.port.on("createTab", function(url) {
 });
 
 pageMod.PageMod({
-    include: [/.*search.disconnect.me.*/ ],
-    contentScriptFile: self.data.url("scripts/serp.js"),
-    contentScriptWhen: "ready",
-    onAttach: function(worker) {
-    worker.port.on("openResult", function(url) {
-        if (localStorage["incognito"] == "true") {
-          var objTab = { url: url, isPrivate: true };
-          tabs.open(objTab);
-        }else{
-          windows.browserWindows.activeWindow.tabs.activeTab.url = url;
-        }
+  include: [/.*search.disconnect.me.*/, /.*searchbeta.disconnect.me.*/],
+  contentScriptFile: self.data.url("scripts/incognito.js"),
+  contentScriptWhen: "ready",
+  onAttach: function(worker) {
+    worker.port.on("open_result", function(request) {
+      var incognito = localStorage["incognito"] == "true";
+      if (incognito && request.type == "new_window") {
+        tabs.open({url: request.url, inNewWindow: true, isPrivate: true});
+      } else if (request.type == "new_tab") {
+        tabs.open({url: request.url, inBackground: true});
+      } else {
+        windows.browserWindows.activeWindow.tabs.activeTab.url = request.url;
+      }
     });
   }
 });
