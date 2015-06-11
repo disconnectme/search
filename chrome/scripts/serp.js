@@ -10,10 +10,9 @@ function modifyForm() {
   var isGoogle = (domain.indexOf(".google.")>=0);
   var isBing = (domain.indexOf("bing.com")>=0);
   var isYahoo = (domain.indexOf("yahoo.com")>=0);
-  var isBlekko = (domain.indexOf("blekko.com")>=0);
   var isDDG = (domain.indexOf("duckduckgo.com")>=0);
 
-  if (isGoogle || isBing || isYahoo || isBlekko || isDDG) {
+  if (isGoogle || isBing || isYahoo || isDDG) {
     var forms = window.document.getElementsByTagName('form');
     forms = [].slice.call(forms, 0);
 

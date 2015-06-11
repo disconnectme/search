@@ -7,19 +7,17 @@ if(window.location.origin == "https://search.disconnect.me" || window.location.o
       var link = results[i];
       link.onclick = function(event) {
         event.preventDefault();
-        if (this.getAttribute("data-tab") == "new") {
-          chrome.runtime.sendMessage({
-            "action":"serp_result_tab",
-            "source": this.href
-          });
-          this.setAttribute("data-tab", "");
-        } else {
-          chrome.runtime.sendMessage({
-            "action":"serp_result",
-            "source" : this.href
-          });
-        }
-      }
+
+        var data_send = {
+          "action": "open_result",
+          "type": "new_tab",
+          "url": this.href
+        };
+
+        var isOpenNewWindow = (event.metaKey != true) && (event.which == 1);
+        if (isOpenNewWindow) data_send.type = "new_window";
+        chrome.runtime.sendMessage(data_send);
+      };
     }
     
     // Ability to open results in new tab (Command + click) on osx / chrome

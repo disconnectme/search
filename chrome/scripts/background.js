@@ -185,11 +185,9 @@ function onBeforeRequest(details) {
   var isGoogle = (CHILD_DOMAIN.search("google.") > -1);
   var isBing = (CHILD_DOMAIN.search("bing.") > -1);
   var isYahoo = (CHILD_DOMAIN.search("yahoo.") > -1);
-  var isBlekko = (CHILD_DOMAIN.search("blekko.") > -1);
   var isDuckDuckGo = (CHILD_DOMAIN.search("duckduckgo.") > -1) && (REQUESTED_URL.search("/html") == -1) ; // /html indicate that the server made a redirect
   var hasSearch = (REQUESTED_URL.search("/search") > -1);
   var hasMaps = (REQUESTED_URL.search("/maps") > -1);
-  var hasWsOrApi = (REQUESTED_URL.search("/ws") > -1) || (REQUESTED_URL.search("/api") > -1);
   var hasGoogleImgApi = (REQUESTED_URL.search("tbm=isch") > -1);
 
   var isOmniboxSearch = (page_focus == false);
@@ -202,7 +200,7 @@ function onBeforeRequest(details) {
     (modeSettings == 3 && (isSearchByPopUp || isOmniboxSearch || !isOmniboxSearch || isSearchByPage ) )
   );
   
-  if(localStorage['search_engines'] == 4 || isDuckDuckGo || (REQUESTED_URL.search("ses=DuckDuckGo") != -1) ) C_EXTENSION_PARAMETER = ""; //if is duckduck no proxy is need on server/
+  if(localStorage['search_engines'] == 3 || isDuckDuckGo || (REQUESTED_URL.search("ses=DuckDuckGo") != -1) ) C_EXTENSION_PARAMETER = ""; //if is duckduck no proxy is need on server/
 
   // blocking autocomplete by OminiBox or by Site URL
   var isChromeInstant = ( isGoogle && T_MAIN_FRAME && (REQUESTED_URL.search("chrome-instant") > -1) );
@@ -213,11 +211,10 @@ function onBeforeRequest(details) {
     (REQUESTED_URL.search("/complete/search") > -1) || (REQUESTED_URL.search("/search") > -1)));
   var isBingOMBSearch = ( isBing && T_OTHER && (REQUESTED_URL.search("osjson.aspx") > -1) );
   var isBingSiteSearch = ( isBing && T_SCRIPT && (REQUESTED_URL.search("qsonhs.aspx") > -1) );
-  var isBlekkoSearch = ( isBlekko && (T_OTHER || T_XMLHTTPREQUEST) && (REQUESTED_URL.search("autocomplete") > -1) );
   var isYahooSearch = ( isYahoo && T_SCRIPT && (REQUESTED_URL.search("search.yahoo") > -1) && ((REQUESTED_URL.search("jsonp") > -1) || (REQUESTED_URL.search("gossip") > -1)) );
   var isNotGoogleMapSearch = !(REQUESTED_URL.search("tbm=map") > -1);
 
-  if ( (isProxied && (isChromeInstant || isGoogleOMBSearch || (isGoogleSiteSearch && isNotGoogleMapSearch) || isBingOMBSearch || isBingSiteSearch || isBlekkoSearch || isYahooSearch)) ||
+  if ( (isProxied && (isChromeInstant || isGoogleOMBSearch || (isGoogleSiteSearch && isNotGoogleMapSearch) || isBingOMBSearch || isBingSiteSearch || isYahooSearch)) ||
     (modeSettings==2||modeSettings==3) && (isBingOMBSearch || isBingSiteSearch || isYahooSearch) ) {
     blocking = true;
     blockingResponse = { cancel: true };
@@ -228,7 +225,7 @@ function onBeforeRequest(details) {
   if (isYahoo) match = REGEX_URL_YAHOO.exec(REQUESTED_URL);
 
   var foundQuery = ((match != null) && (match.length > 1));
-  var URLToProxy = ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || (isBlekko && hasWsOrApi) || isDuckDuckGo);
+  var URLToProxy = ((isGoogle && (hasSearch || hasMaps)) || (isBing && hasSearch) || (isYahoo && hasSearch) || isDuckDuckGo);
 
   if (isProxied && T_MAIN_FRAME && URLToProxy && foundQuery && !blocking) {
     //console.log("%c Search by OminiBox/Everywhere", 'background: #33ffff;');
@@ -239,8 +236,7 @@ function onBeforeRequest(details) {
     if      ( (searchEngineIndex == 0 && !isSearchByPage) || (isGoogle && isSearchByPage) )     searchEngineName = 'Google';
     else if ( (searchEngineIndex == 1 && !isSearchByPage) || (isBing && isSearchByPage) )       searchEngineName = 'Bing';
     else if ( (searchEngineIndex == 2 && !isSearchByPage) || (isYahoo && isSearchByPage) )      searchEngineName = 'Yahoo';
-    else if ( (searchEngineIndex == 3 && !isSearchByPage) || (isBlekko && isSearchByPage) )     searchEngineName = 'Blekko';
-    else if ( (searchEngineIndex == 4 && !isSearchByPage) || (isDuckDuckGo && isSearchByPage) ) searchEngineName = 'DuckDuckGo';
+    else if ( (searchEngineIndex == 3 && !isSearchByPage) || (isDuckDuckGo && isSearchByPage) ) searchEngineName = 'DuckDuckGo';
     else searchEngineName = 'Google';
 
     var url_redirect = 'https://' + C_PROXY_SEARCH + '/searchTerms/search?query=' + match[1] + C_EXTENSION_PARAMETER + '&ses=' + searchEngineName;
@@ -320,6 +316,17 @@ function onRuntimeMessage(request, sender, sendResponse) {
       chrome.windows.create({url:request.source, incognito:true});
     } else {
       chrome.tabs.create({url:request.source});
+    }
+
+  } else if (request.action == 'open_result') {
+
+    var incognito = deserialize(localStorage.getItem("search_incognito"));
+    if (incognito && request.type == "new_window") {
+      chrome.windows.create({url: request.url, incognito: true});
+    } else if (request.type == "new_tab") {
+      chrome.tabs.create({url: request.url, selected: false});
+    } else {
+      chrome.tabs.update({url: request.url});
     }
 
   } else if (request.action == 'get_group_disconnect') {

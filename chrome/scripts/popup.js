@@ -145,8 +145,7 @@ window.onload = function() {
     if (searchEngineIndex == 0) uri = 'www.google.com/search?q=';
     else if (searchEngineIndex == 1) uri = 'us.bing.com/search?q=';
     else if (searchEngineIndex == 2) uri = 'search.yahoo.com/search?p=';
-    else if (searchEngineIndex == 3) uri = 'blekko.com/ws?q=';
-    else if (searchEngineIndex == 4) uri = 'duckduckgo.com/?q=';
+    else if (searchEngineIndex == 3) uri = 'duckduckgo.com/?q=';
 
     uri = PREFIX_URL + uri + encodeURIComponent(TXT_SEARCH.val()) + '&search_plus_one=popup';
     chrome.tabs.create({url: uri});
@@ -180,8 +179,7 @@ window.onload = function() {
     if (x == 0) icon = "google";
     else if (x == 1) icon = "bing";
     else if (x == 2) icon = "yahoo";
-    else if (x == 3) icon = "blekko";
-    else if (x == 4) icon = "duckduckgo";
+    else if (x == 3) icon = "duckduckgo";
 
     document.getElementById("search_engine").className = icon;
   };
