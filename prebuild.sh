@@ -22,7 +22,7 @@
 cd builds
 rm search.rdf search.xpi
 cd ../firefox
-cfx xpi --update-link https://www.disconnect.me/extensions/search.xpi --update-url https://www.disconnect.me/search.rdf
+cfx xpi --update-link https://s3.amazonaws.com/releases.disconnect.me/search/search.xpi --update-url https://www.disconnect.me/search.rdf
 cd ../builds
 mv ../firefox/search.update.rdf search.rdf
 mv ../firefox/search.xpi .
