@@ -14,7 +14,7 @@ if (window.location.origin == "https://search.disconnect.me" || window.location.
           "url": this.href
         };
 
-        var isOpenNewWindow = (event.metaKey != true) && (event.which == 1);
+        var isOpenNewWindow = (event.metaKey == false && event.ctrlKey == false) && (event.which == 1);
         if (isOpenNewWindow) data_send.type = "new_window";
         self.port.emit(data_send.action, data_send);
       };

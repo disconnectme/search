@@ -309,15 +309,6 @@ function onHttpModifyRequest(channel) {
       var url_redirect = REQUESTED_URL + C_EXTENSION_PARAMETER;
       var uri = iOService.newURI(url_redirect, "UTF-8", null);
       redirectTo(channel, uri);
-    } else if (!PARENT && modeSettings>=2 && /jQuery?/.test(REQUESTED_URL)) {
-      //console.log("FOUND BLEKKO HACK", REQUESTED_URL);
-      var dcm = getDocumentFromChannel(channel);
-      if (dcm) {
-        var jsCode = "window.location = '" + REQUESTED_URL + '&search_plus_one=form'+ "';";
-        var script = dcm.createElement('script');
-        script.innerHTML = jsCode;
-        dcm.body.appendChild(script);
-      }
     }
   } catch(e) {
     //console.log("Http-on-Modify-Request Exception:", e, channel.URI.spec);

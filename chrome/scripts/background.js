@@ -252,10 +252,6 @@ function onBeforeRequest(details) {
       blockingResponse = {
         redirectUrl: REQUESTED_URL + C_EXTENSION_PARAMETER
       };
-    }else if ((modeSettings==2 || modeSettings==3) && T_SCRIPT && isBlekko && hasWsOrApi) {
-      // HACK blekko redirect - only FORM use
-      var jsCode = "window.location = '" + REQUESTED_URL + '&search_plus_one=form'+ "';";
-      chrome.tabs.executeScript(details.tabId, {code: jsCode, runAt: "document_start"}, function(){});
     }
   } else if(blocking) {
     //console.log("%c BLOCKED",'background: #333333; color:#ff0000');
@@ -299,24 +295,6 @@ function onRuntimeMessage(request, sender, sendResponse) {
     localStorage['search_group'] = request.adblock_group_id;
     localStorage['search_user_id'] = request.adblock_user_id;
     search_load_adblock();
-    
-  } else if (request.action == 'serp_result') {
-
-    var incognito = deserialize(localStorage.getItem("search_incognito"));
-    if (incognito) {
-      chrome.windows.create({url:request.source, incognito:true});
-    } else {
-      chrome.tabs.update({url:request.source});
-    }
-
-  } else if (request.action == 'serp_result_tab') {
-
-    var incognito = deserialize(localStorage.getItem("search_incognito"));
-    if (incognito) {
-      chrome.windows.create({url:request.source, incognito:true});
-    } else {
-      chrome.tabs.create({url:request.source});
-    }
 
   } else if (request.action == 'open_result') {
 
