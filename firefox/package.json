@@ -8,6 +8,10 @@
   "author": "Disconnect",
   "homepage": "https://www.disconnect.me/search",
   "icon": "./data/images/48.png",
+  "main": "./lib/main.js",
+  "engines": {
+    "firefox": ">=38.0a1"
+  },
   "permissions": {
   	"private-browsing": true
   }

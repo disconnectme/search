@@ -305,7 +305,9 @@ function onHttpModifyRequest(channel) {
       var uri = iOService.newURI(url_redirect, "UTF-8", null);
       redirectTo(channel, uri);
     } else if (isWebSearch && hasNotParametersExtension) {
-      //search from websearch page, add parameters(if they aren't there yet) to indicate that extension is already installed.
+      //console.log("search from websearch page, add parameters(if they aren't there yet) to indicate that extension is already installed.");
+      //fix for DisconnectSearch
+      var inputStream = Components.classes["@mozilla.org/io/string-input-stream;1"].createInstance(Components.interfaces.nsIStringInputStream);
       var url_redirect = REQUESTED_URL + C_EXTENSION_PARAMETER;
       var uri = iOService.newURI(url_redirect, "UTF-8", null);
       redirectTo(channel, uri);

@@ -453,13 +453,14 @@ div {
   backface-visibility: visible !important;
   animation-name: flipInYGreen;
 }
+/*
 .animated {
-  -moz-animation-duration: 1s;
-  animation-duration: 1s;
   -moz-animation-fill-mode: both;
   animation-fill-mode: both;
+  -moz-animation-duration: 1s;
+  animation-duration: 1s;
 }
-
+*/
 #support span {
   display: block;
   background: #21953a url(../images/heart.png) no-repeat 53px 12px;

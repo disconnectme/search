@@ -6,9 +6,9 @@ var tabs = require("sdk/tabs");
 var windows = require("sdk/windows");
 var pageMod = require("sdk/page-mod");
 var localStorage = require("sdk/simple-storage").storage;
-var toolbarbutton = require("toolbar/toolbarbutton");
+var tgButton = require('sdk/ui/button/toggle');
 var privateBrowsing = require("sdk/private-browsing");
-var BG = require("background.js");
+var BG = require("./background.js");
 
 var searchPanel = panel.Panel({
   width: 280,
@@ -17,16 +17,20 @@ var searchPanel = panel.Panel({
   contentScriptFile: [
     self.data.url("scripts/vendor/jquery/jquery.js"),
     self.data.url("scripts/popup.js")
-  ]
+  ],
+  onHide: handleHide
 });
 
-var searchButton = toolbarbutton.ToolbarButton({
+var searchButton = tgButton.ToggleButton({
   id: "disconnect-search",
   label: "Disconnect Search",
   tooltiptext: "Disconnect Search",
-  image: self.data.url("images/16.png"),
-  panel: searchPanel,
-  onCommand: function() { }
+  icon: {
+    "16": "./images/16.png",
+    "32": "./images/48.png",
+    "64": "./images/128.png"
+  },
+  onChange: handleChange
 });
  
 searchPanel.on("show", function() {
@@ -74,14 +78,16 @@ pageMod.PageMod({
     contentScriptWhen: "ready"
 });
 
-exports.main = function(options, callbacks) {
-  // On install moves button into the toolbar
-  if (options.loadReason == "install") {
-    searchButton.moveTo({
-      toolbarID: "nav-bar",
-      forceMove: false
-    });
+function handleChange(state) {
+  if (state.checked) {
+    searchPanel.show({position: searchButton});
   }
+};
 
+function handleHide() {
+  searchButton.state('window', {checked: false});
+};
+
+exports.main = function(options, callbacks) {
   BG.search_initialize(options);
 };

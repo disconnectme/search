@@ -4,18 +4,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
-    <em:id>search@disconnect.me</em:id>
-    <em:version>2.0.7</em:version>
     <em:type>2</em:type>
+    <em:id>search@disconnect.me</em:id>
+    <em:name>Disconnect Search</em:name>
+    <em:version>2.0.7</em:version>
+    <em:creator>Disconnect</em:creator>
+    <em:description>Search privately using your favorite search engine.</em:description>
+    <em:homepageURL>https://www.disconnect.me/search</em:homepageURL>
     <em:bootstrap>true</em:bootstrap>
     <em:unpack>false</em:unpack>
-
+    <em:updateURL>https://s3.amazonaws.com/releases.disconnect.me/search/search.rdf</em:updateURL>
+    <em:updateLink>https://s3.amazonaws.com/releases.disconnect.me/search/search.xpi</em:updateLink>
     <!-- Firefox -->
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>1.5</em:minVersion>
-        <em:maxVersion>30.*</em:maxVersion>
+        <em:maxVersion>31.*</em:maxVersion>
       </Description>
     </em:targetApplication>
     <!-- Flock -->
@@ -23,16 +28,8 @@
       <Description>
         <em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id>
         <em:minVersion>0.7</em:minVersion>
-        <em:maxVersion>2.6.*</em:maxVersion>
+        <em:maxVersion>2.6.2</em:maxVersion>
       </Description>
     </em:targetApplication>
-
-    <!-- Front End MetaData -->
-    <em:name>Disconnect Search</em:name>
-    <em:description>Search privately using your favorite search engine.</em:description>
-    <em:creator>Disconnect</em:creator>
-    <em:homepageURL>https://www.disconnect.me/search</em:homepageURL>
-    
-    <em:updateURL>https://s3.amazonaws.com/releases.disconnect.me/search/search.rdf</em:updateURL>
   </Description>
 </RDF>
